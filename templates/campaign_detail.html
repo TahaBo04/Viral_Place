@@ -18,7 +18,7 @@
       {% else %}<a class="button-primary" href="{{ url_for('creators.onboarding') }}">BUILD CREATOR PROFILE</a>{% endif %}
     {% elif current_user.is_authenticated and current_user.id == campaign.business_id %}
       <a class="button-secondary" href="{{ url_for('creators.list_creators', campaign_id=campaign.id) }}">FIND CREATORS</a>
-    {% else %}<a class="button-primary" href="{{ url_for('auth.login') }}">LOG IN TO CONTINUE</a>{% endif %}
+    {% else %}<a class="button-primary" href="{{ url_for('auth.login', account_type='influencer') }}">INFLUENCER LOGIN TO APPLY</a>{% endif %}
   </aside>
 </section>
 

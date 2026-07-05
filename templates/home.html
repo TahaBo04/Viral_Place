@@ -7,7 +7,7 @@
 {% block header_subtitle %}Brands pay Viral Place. We activate the selected creator, review every video, deliver only approved work, and release creator payouts after quality control.{% endblock %}
 {% block hero_actions %}
   <div class="hero-actions">
-    <a class="button-primary" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register') }}">START A CAMPAIGN</a>
+    <a class="button-primary" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register', account_type='business') }}">START A CAMPAIGN</a>
     <a class="button-secondary" href="{{ url_for('campaigns.list_campaigns') }}">VIEW LIVE BRIEFS</a>
   </div>
 {% endblock %}
@@ -19,7 +19,7 @@
     <p class="eyebrow">FOR BRANDS</p>
     <h2>DEMAND THE SERVICE.<br>WE HANDLE THE REST.</h2>
     <p>Send Viral Place your brief, secure the budget, and let our operations team source, manage, review, and deliver the creator asset.</p>
-    <a class="text-link" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register') }}">CREATE A MANAGED BRIEF →</a>
+    <a class="text-link" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register', account_type='business') }}">CREATE A MANAGED BRIEF →</a>
   </article>
   <article class="pathway">
     <span class="section-index">02</span>

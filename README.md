@@ -39,7 +39,8 @@ Do not enable `VIRAL_PLACE_DEMO` in production.
 
 ## Main routes
 
-- `/auth/register`, `/auth/login`
+- `/auth/register`, `/auth/register/business`, `/auth/register/influencer`
+- `/auth/login`, `/auth/login/business`, `/auth/login/influencer`
 - `/creators/`, `/campaigns/`, `/campaigns/new`
 - `/business/dashboard`, `/influencer/dashboard`
 - `/orders/<id>`, `/notifications/`

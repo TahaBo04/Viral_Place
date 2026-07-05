@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% set is_login = mode == 'login' %}
+{% block title %}{{ 'Log in' if is_login else 'Join' }} · Viral Place{% endblock %}
+{% block eyebrow %}TWO SIDES. ONE MANAGED WORKFLOW.{% endblock %}
+{% block header_title %}CHOOSE YOUR<br>WORKSPACE.{% endblock %}
+{% block header_subtitle %}Brands control campaigns and payments. Influencers manage applications, production, submissions, and payouts.{% endblock %}
+{% block content %}
+<section class="portal-choice">
+  <a class="portal-option brand-option" href="{{ url_for('auth.login' if is_login else 'auth.register', account_type='business') }}">
+    <span>01 / BRAND</span>
+    <h2>{{ 'BRAND LOGIN' if is_login else 'CREATE A BRAND ACCOUNT' }}</h2>
+    <p>Launch briefs, select creators, secure payment, and receive approved campaign assets.</p>
+    <strong>{{ 'OPEN BRAND PORTAL' if is_login else 'JOIN AS A BRAND' }} →</strong>
+  </a>
+  <a class="portal-option creator-option" href="{{ url_for('auth.login' if is_login else 'auth.register', account_type='influencer') }}">
+    <span>02 / INFLUENCER</span>
+    <h2>{{ 'INFLUENCER LOGIN' if is_login else 'CREATE A CREATOR ACCOUNT' }}</h2>
+    <p>Build your creator profile, apply to matched briefs, submit content, and track payouts.</p>
+    <strong>{{ 'OPEN CREATOR PORTAL' if is_login else 'JOIN AS AN INFLUENCER' }} →</strong>
+  </a>
+</section>
+<p class="choice-switch">{{ 'NEW TO VIRAL PLACE?' if is_login else 'ALREADY HAVE AN ACCOUNT?' }} <a href="{{ url_for('auth.register' if is_login else 'auth.login') }}">{{ 'CHOOSE A SIGNUP PORTAL' if is_login else 'CHOOSE A LOGIN PORTAL' }}</a></p>
+{% endblock %}
