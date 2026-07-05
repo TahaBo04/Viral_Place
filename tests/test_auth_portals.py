@@ -1,6 +1,7 @@
 import unittest
 
 from app import create_app, initialize_database
+from models.user import User
 
 
 class AuthPortalTests(unittest.TestCase):
@@ -74,6 +75,28 @@ class AuthPortalTests(unittest.TestCase):
         )
         self.assertEqual(brand_in_creator_portal.status_code, 403)
         self.assertIn(b"brand portal", brand_in_creator_portal.data)
+
+    def test_brand_can_open_profile_and_update_phone(self):
+        self.register_brand()
+        dashboard = self.client.get("/business/dashboard")
+        self.assertIn(b'href="/profile/edit"', dashboard.data)
+
+        response = self.client.post(
+            "/profile/edit",
+            data={
+                "first_name": "Brand",
+                "last_name": "Owner",
+                "company_name": "Portal Brand",
+                "company_website": "https://example.com",
+                "phone_number": "+212612345619",
+                "phone_active_confirmed": "on",
+                "bio": "Updated contact details.",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            user = User.query.filter_by(email="brand-portal@test.local").first()
+            self.assertEqual(user.phone_number, "+212612345619")
 
 
 if __name__ == "__main__":

@@ -136,8 +136,11 @@ def select_creator(campaign_id, application_id):
     if current_user.id != campaign.business_id:
         return "Access denied", 403
     application = Application.query.filter_by(id=application_id, campaign_id=campaign.id).first_or_404()
-    if not current_user.phone_number or not application.creator_profile.user.phone_number:
-        flash("Both parties need active phone contacts before selection.", "warning")
+    if not current_user.phone_number:
+        flash("Add your active brand phone number before selecting a creator.", "warning")
+        return redirect(url_for("profile.edit_profile"))
+    if not application.creator_profile.user.phone_number:
+        flash("This creator must add an active phone number before selection.", "warning")
         return redirect(url_for("campaigns.campaign_detail", campaign_id=campaign.id))
     if application.order:
         return redirect(url_for("orders.order_detail", order_id=application.order.id))

@@ -24,6 +24,7 @@
         {% if current_user.role == 'business' %}<a href="{{ url_for('business.dashboard') }}">BRAND HUB</a>{% endif %}
         {% if current_user.role == 'influencer' %}<a href="{{ url_for('influencer.dashboard') }}">CREATOR HUB</a>{% endif %}
         {% if current_user.role == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">OPERATIONS</a>{% endif %}
+        {% if current_user.role in ['business', 'influencer'] %}<a href="{{ url_for('profile.edit_profile') }}">PROFILE</a>{% endif %}
         <a href="{{ url_for('notifications.list_notifications') }}">ALERTS{% if unread_notification_count %}<span class="nav-count">{{ unread_notification_count }}</span>{% endif %}</a>
         <form method="post" action="{{ url_for('auth.logout') }}" class="nav-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-button">LOG OUT</button></form>
       {% else %}
