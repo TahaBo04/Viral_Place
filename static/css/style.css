@@ -131,7 +131,9 @@ button, input, textarea, select { font: inherit; letter-spacing: 0; }
 .text-link { min-height: auto; padding: 0; color: var(--lime); border: 0; justify-content: flex-start; }
 
 .ticker { overflow: hidden; border-bottom: 1px solid var(--lime); border-top: 1px solid var(--lime); background: var(--lime); color: var(--black); white-space: nowrap; }
-.ticker span { display: block; padding: 11px 0; font-family: "Unbounded", sans-serif; font-size: 14px; font-weight: 900; }
+.ticker-track { display: flex; width: max-content; animation: ticker-scroll 24s linear infinite; will-change: transform; }
+.ticker span { flex: 0 0 auto; display: block; padding: 11px 24px 11px 0; font-family: "Unbounded", sans-serif; font-size: 14px; font-weight: 900; }
+@keyframes ticker-scroll { to { transform: translateX(-50%); } }
 .page-shell { width: min(1280px, calc(100% - 48px)); margin: 0 auto; padding: 48px 0 100px; }
 .flash-stack { display: grid; gap: 10px; margin-bottom: 24px; }
 .flash { padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); }
@@ -153,7 +155,7 @@ button, input, textarea, select { font: inherit; letter-spacing: 0; }
 .section-heading h2 { font-size: 42px; }
 .row-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .process-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.process-grid img, .process-card { width: 100%; min-height: 340px; aspect-ratio: 0.8; object-fit: cover; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.process-card { width: 100%; min-height: 340px; aspect-ratio: 0.8; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .process-card { padding: 28px; display: flex; flex-direction: column; }
 .process-card span { color: var(--lime); font-family: "Unbounded", sans-serif; font-size: 34px; font-weight: 900; }
 .process-card h3 { margin-top: auto; font-size: 22px; }
@@ -300,7 +302,7 @@ input::placeholder, textarea::placeholder { color: #777d77; }
   .pathway { min-height: 360px; padding: 28px; }
   .pathway h2, .section-heading h2 { font-size: 28px; }
   .process-grid, .card-grid { grid-template-columns: 1fr; }
-  .process-grid img, .process-card { min-height: auto; aspect-ratio: 1; }
+  .process-card { min-height: auto; aspect-ratio: 1; }
   .row-heading, .pipeline-row { align-items: stretch; flex-direction: column; }
   .pipeline-row { min-height: 0; }
   .dashboard-metrics, .stat-grid, .order-facts { grid-template-columns: 1fr 1fr; }
@@ -308,4 +310,8 @@ input::placeholder, textarea::placeholder { color: #777d77; }
   .verification-strip, .review-compact { grid-template-columns: 1fr; }
   .site-footer { grid-template-columns: 1fr; }
   .footer-links { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation-play-state: paused; }
 }
