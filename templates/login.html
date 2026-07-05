@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Log in · Viral Place{% endblock %}
+{% block eyebrow %}WELCOME BACK{% endblock %}
+{% block header_title %}OPEN YOUR WORKSPACE.{% endblock %}
+{% block header_subtitle %}Access campaign briefs, selections, payments, submissions, reviews, and notifications.{% endblock %}
+{% block content %}
+<section class="form-section narrow">
+  <form method="post" class="form-card">
+    <label>EMAIL<input type="email" name="email" value="{{ request.form.get('email','') }}" autocomplete="email" required></label>
+    <label>PASSWORD<input type="password" name="password" autocomplete="current-password" required></label>
+    <label class="check-row"><input type="checkbox" name="remember"><span>KEEP ME SIGNED IN</span></label>
+    <button class="button-primary" type="submit">LOG IN</button>
+    <p class="form-note">NEW HERE? <a href="{{ url_for('auth.register') }}">CREATE AN ACCOUNT</a></p>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Join · Viral Place{% endblock %}
+{% block eyebrow %}INSTANT BUSINESS ACCESS{% endblock %}
+{% block header_title %}ENTER VIRAL PLACE.{% endblock %}
+{% block header_subtitle %}Businesses can create briefs immediately. Creators can build a profile and apply as soon as signup is complete.{% endblock %}
+{% block content %}
+<section class="form-section">
+  <form method="post" class="form-card" novalidate>
+    <div class="role-switch">
+      <label><input type="radio" name="role" value="business" {% if request.form.get('role','business') == 'business' %}checked{% endif %}><span>BRAND / COMPANY</span></label>
+      <label><input type="radio" name="role" value="influencer" {% if request.form.get('role') == 'influencer' %}checked{% endif %}><span>INFLUENCER</span></label>
+    </div>
+    <div class="two-col">
+      <label>FIRST NAME<input name="first_name" value="{{ request.form.get('first_name','') }}" autocomplete="given-name" required></label>
+      <label>LAST NAME<input name="last_name" value="{{ request.form.get('last_name','') }}" autocomplete="family-name" required></label>
+      <label>EMAIL<input type="email" name="email" value="{{ request.form.get('email','') }}" autocomplete="email" required></label>
+      <label>PASSWORD<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <label>COMPANY / BRAND NAME<input name="company_name" value="{{ request.form.get('company_name','') }}" placeholder="Required for business accounts"></label>
+      <label>COMPANY WEBSITE<input type="url" name="company_website" value="{{ request.form.get('company_website','') }}" placeholder="https://"></label>
+      <label class="span-2">CREATOR SOCIAL PROFILE<input type="url" name="social_profile_url" value="{{ request.form.get('social_profile_url','') }}" placeholder="Optional Instagram, TikTok, or YouTube URL"></label>
+    </div>
+    <button class="button-primary" type="submit">CREATE ACCOUNT</button>
+    <p class="form-note">Companies enter immediately with no identity approval delay. Creators complete a social account ownership check before appearing in discovery.</p>
+  </form>
+</section>
+{% endblock %}

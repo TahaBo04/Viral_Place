@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Viral Place is Viral Talent's managed creator marketplace for campaign sourcing, payment, review, delivery, and payouts.">
+  <title>{% block title %}Viral Place{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='uploads/viral-talent-logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <nav class="site-nav" aria-label="Primary navigation">
+    <a class="wordmark" href="{{ url_for('home') }}" aria-label="Viral Place home">
+      <span class="bolt">ϟ</span>
+      <span>VIRAL PLACE</span>
+      <img src="{{ url_for('static', filename='uploads/viral-talent-logo.png') }}" alt="A Viral Talent company">
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mainNav" data-menu-toggle>MENU</button>
+    <div class="nav-links" id="mainNav">
+      <a href="{{ url_for('creators.list_creators') }}">CREATORS</a>
+      <a href="{{ url_for('campaigns.list_campaigns') }}">CAMPAIGNS</a>
+      {% if current_user.is_authenticated %}
+        {% if current_user.role == 'business' %}<a href="{{ url_for('business.dashboard') }}">BRAND HUB</a>{% endif %}
+        {% if current_user.role == 'influencer' %}<a href="{{ url_for('influencer.dashboard') }}">CREATOR HUB</a>{% endif %}
+        {% if current_user.role == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">OPERATIONS</a>{% endif %}
+        <a href="{{ url_for('notifications.list_notifications') }}">ALERTS{% if unread_notification_count %}<span class="nav-count">{{ unread_notification_count }}</span>{% endif %}</a>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="nav-form"><button type="submit" class="nav-button">LOG OUT</button></form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">LOG IN</a>
+        <a class="nav-cta" href="{{ url_for('auth.register') }}">JOIN THE PLACE</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <header class="page-hero {% block hero_class %}compact-hero{% endblock %}">
+    <div class="hero-inner">
+      <p class="eyebrow">{% block eyebrow %}PERFORMANCE-DRIVEN. CREATOR-LED.{% endblock %}</p>
+      <h1>{% block header_title %}CREATOR CAMPAIGNS.<br>MANAGED END TO END.{% endblock %}</h1>
+      <p class="hero-copy">{% block header_subtitle %}Viral Place secures payment, manages production, reviews every asset, and delivers approved creator content.{% endblock %}</p>
+      {% block hero_actions %}{% endblock %}
+    </div>
+  </header>
+
+  <div class="ticker" aria-hidden="true">
+    <span>VIRAL PLACE • SECURE PAYMENT • CREATOR SELECTION • AGENCY REVIEW • APPROVED DELIVERY • CREATOR PAYOUT •</span>
+  </div>
+
+  <main class="page-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for category, msg in messages %}
+            <div class="flash flash-{{ category }}" role="alert">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <span class="footer-mark">VIRAL PLACE</span>
+      <p>A VIRAL TALENT COMPANY</p>
+    </div>
+    <div class="footer-links">
+      <a href="https://viraltalent.co/" target="_blank" rel="noopener noreferrer">VIRAL TALENT</a>
+      <a href="{{ url_for('campaigns.list_campaigns') }}">CAMPAIGNS</a>
+      <a href="{{ url_for('creators.list_creators') }}">CREATORS</a>
+    </div>
+    <p>© 2026 VIRAL TALENT. ALL RIGHTS RESERVED.</p>
+  </footer>
+
+  <script>
+    const toggle = document.querySelector('[data-menu-toggle]');
+    const nav = document.getElementById('mainNav');
+    if (toggle && nav) toggle.addEventListener('click', () => {
+      const open = nav.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

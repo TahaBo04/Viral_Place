@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Alerts · Viral Place{% endblock %}
+{% block eyebrow %}WORKFLOW NOTIFICATIONS{% endblock %}
+{% block header_title %}EVERY SELECTION.<br>EVERY DECISION.{% endblock %}
+{% block header_subtitle %}Payment confirmations, creator activation, review outcomes, delivery, refunds, and payouts.{% endblock %}
+{% block content %}<div class="page-actions"><form method="post" action="{{ url_for('notifications.read_all') }}"><button class="button-secondary" type="submit">MARK ALL READ</button></form></div><section class="pipeline-list">{% for item in notifications %}<article class="pipeline-row {% if not item.is_read %}is-unread{% endif %}"><span class="status-dot"></span><div><h3>{{ item.title }}</h3><p>{{ item.message }}</p><small>{{ item.created_at.strftime('%d %b %Y • %H:%M') }}</small></div>{% if item.link %}<form method="post" action="{{ url_for('notifications.mark_read', notification_id=item.id) }}"><button class="button-secondary compact" type="submit">OPEN</button></form>{% endif %}</article>{% else %}<p class="empty-state">NO NOTIFICATIONS YET.</p>{% endfor %}</section>{% endblock %}

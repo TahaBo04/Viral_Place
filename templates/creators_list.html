@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Creators · Viral Place{% endblock %}
+{% block eyebrow %}CREATOR NETWORK{% endblock %}
+{% block header_title %}TALENT BUILT FOR PERFORMANCE.{% endblock %}
+{% block header_subtitle %}Filter creators by niche, platform, and audience market. Invite a creator into your paid Viral Place workflow.{% endblock %}
+{% block content %}
+<section class="filter-band"><form method="get" class="filter-form"><input name="niche" placeholder="NICHE" value="{{ request.args.get('niche','') }}"><input name="platform" placeholder="PLATFORM" value="{{ request.args.get('platform','') }}"><input name="country" placeholder="COUNTRY" value="{{ request.args.get('country','') }}">{% if campaign %}<input type="hidden" name="campaign_id" value="{{ campaign.id }}">{% endif %}<button class="button-primary compact" type="submit">FILTER</button></form></section>
+<section class="card-grid">{% for creator in creators %}<a class="creator-card tall" href="{{ url_for('creators.creator_detail', creator_id=creator.id) }}"><div class="card-topline"><span class="avatar">{{ creator.display_name[:1] }}</span>{% if scores.get(creator.id) is not none %}<span class="score">{{ scores[creator.id] }}%</span>{% endif %}</div><h2>{{ creator.display_name }}</h2><p>{{ creator.media_kit_summary|truncate(140) }}</p><div class="card-footer"><span>{{ creator.niche }} • {{ creator.audience_country }}</span><strong>{{ "{:,}".format(creator.followers) }} FOLLOWERS</strong></div></a>{% else %}<p class="empty-state">NO CREATORS MATCH THOSE FILTERS.</p>{% endfor %}</section>
+{% endblock %}
