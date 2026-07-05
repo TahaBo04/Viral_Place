@@ -16,6 +16,12 @@ def _configure() -> None:
     stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 
+def stripe_object_dict(value) -> dict:
+    if hasattr(value, "to_dict"):
+        return value.to_dict()
+    return dict(value or {})
+
+
 def create_checkout(order, base_url: str) -> str:
     if not stripe_configured():
         raise RuntimeError("Stripe is not configured")
@@ -51,10 +57,11 @@ def sync_checkout(order, session_id: str) -> bool:
         return False
     _configure()
     session = stripe.checkout.Session.retrieve(session_id)
-    if str(session.metadata.get("order_id")) != str(order.id):
+    session_data = stripe_object_dict(session)
+    if str(session_data.get("metadata", {}).get("order_id")) != str(order.id):
         return False
-    if session.payment_status == "paid":
-        mark_order_paid(order, str(session.payment_intent or ""))
+    if session_data.get("payment_status") == "paid":
+        mark_order_paid(order, str(session_data.get("payment_intent") or ""))
         return True
     return False
 
