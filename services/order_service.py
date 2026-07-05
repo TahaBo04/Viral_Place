@@ -72,6 +72,10 @@ def select_application(application: Application, amount_cents: int, actor_id: in
 def assign_creator(order: Order, creator_profile: CreatorProfile, actor_id: int) -> None:
     if creator_profile.verification_status != "verified":
         raise ValueError("Only verified creators can be assigned")
+    if not creator_profile.user.phone_number:
+        raise ValueError("The creator must add an active phone number before assignment")
+    if not order.business.phone_number:
+        raise ValueError("The brand must add an active phone number before assignment")
     order.creator_profile_id = creator_profile.id
     order.influencer_id = creator_profile.user_id
     if order.payment_status == "paid":

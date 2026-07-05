@@ -109,6 +109,9 @@ def invite_creator(creator_id):
     if not is_business():
         return "Access denied", 403
     creator = CreatorProfile.query.get_or_404(creator_id)
+    if not current_user.phone_number or not creator.user.phone_number:
+        flash("Both parties need active phone contacts before selection.", "warning")
+        return redirect(url_for("creators.creator_detail", creator_id=creator.id))
     if creator.verification_status != "verified":
         flash("This creator is still completing social ownership review.", "warning")
         return redirect(url_for("creators.creator_detail", creator_id=creator.id))

@@ -3,4 +3,4 @@
 {% block eyebrow %}{{ score }}% MATCH{% endblock %}
 {% block header_title %}MAKE THE CASE.<br>WIN THE BRIEF.{% endblock %}
 {% block header_subtitle %}{{ campaign.title }}{% endblock %}
-{% block content %}<section class="form-section narrow"><form method="post" class="form-card"><label>APPLICATION MESSAGE<textarea name="message" rows="7" required placeholder="Pitch the hook, format, audience fit, and delivery timing."></textarea></label><button class="button-primary" type="submit">SEND APPLICATION</button></form></section>{% endblock %}
+{% block content %}<section class="form-section narrow"><form method="post" class="form-card"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label>APPLICATION MESSAGE<textarea name="message" rows="7" required placeholder="Pitch the hook, format, audience fit, and delivery timing."></textarea></label><button class="button-primary" type="submit">SEND APPLICATION</button></form></section>{% endblock %}

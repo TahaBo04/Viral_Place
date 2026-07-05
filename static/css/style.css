@@ -173,6 +173,11 @@ button, input, textarea, select { font: inherit; letter-spacing: 0; }
 .process-card span { color: var(--lime); font-family: "Unbounded", sans-serif; font-size: 34px; font-weight: 900; }
 .process-card h3 { margin-top: auto; font-size: 22px; }
 .process-card p { color: var(--muted); }
+.feedback-card { min-height: 230px; padding: 24px; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.feedback-card span { color: var(--lime); font-size: 12px; font-weight: 900; }
+.feedback-card h3 { margin: auto 0 12px; font-family: "Unbounded", sans-serif; font-size: 19px; }
+.feedback-card p { color: var(--muted); }
+.feedback-card small, .order-facts small { color: var(--muted); }
 
 .card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .creator-card, .campaign-card {

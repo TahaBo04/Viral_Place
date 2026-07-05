@@ -7,10 +7,11 @@
 {% block header_subtitle %}{{ 'Access briefs, creator selections, payments, reviews, and approved delivery.' if is_brand else 'Access creator verification, campaign review, refunds, and payouts.' if is_admin else 'Access matched briefs, applications, paid assignments, submissions, and payouts.' }}{% endblock %}
 {% block content %}
 <section class="form-section narrow">
-  <form method="post" class="form-card">
+  <form method="post" class="form-card"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="account_type" value="{{ portal_role or '' }}">
     <label>{{ 'WORK EMAIL' if is_brand or is_admin else 'CREATOR EMAIL' }}<input type="email" name="email" value="{{ request.form.get('email','') }}" autocomplete="email" required></label>
     <label>PASSWORD<input type="password" name="password" autocomplete="current-password" required></label>
+    {% if is_admin %}<label>OPERATIONS ACCESS CODE<input type="password" name="admin_access_code" autocomplete="one-time-code" required></label>{% endif %}
     <label class="check-row"><input type="checkbox" name="remember"><span>KEEP ME SIGNED IN</span></label>
     <button class="button-primary" type="submit">{{ 'OPEN BRAND HUB' if is_brand else 'OPEN OPERATIONS' if is_admin else 'OPEN CREATOR HUB' }}</button>
     {% if not is_admin %}<p class="form-note">NEW HERE? <a href="{{ url_for('auth.register', account_type=portal_role) }}">CREATE {{ 'A BRAND' if is_brand else 'AN INFLUENCER' }} ACCOUNT</a></p>

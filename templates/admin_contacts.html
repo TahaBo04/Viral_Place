@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Private contacts · Viral Place{% endblock %}
+{% block eyebrow %}OPERATIONS ONLY{% endblock %}
+{% block header_title %}PRIVATE CONTACT DIRECTORY.{% endblock %}
+{% block header_subtitle %}Self-confirmed numbers supplied for urgent campaign, delivery, refund, and payout communication. Never shown publicly.{% endblock %}
+{% block content %}<section class="pipeline-list">{% for user in users %}<article class="pipeline-row"><span class="avatar">{{ user.first_name[:1] }}{{ user.last_name[:1] }}</span><div><h3>{{ user.display_name }}</h3><p>{{ user.role|upper }} • {{ user.email }}</p><small>{{ 'CONFIRMED ' + user.phone_confirmed_at.strftime('%d %b %Y') if user.phone_confirmed_at else 'NOT YET CONFIRMED' }}</small></div>{% if user.phone_number %}<a class="button-primary compact" href="tel:{{ user.phone_number }}">{{ user.phone_number }}</a>{% else %}<span class="status-badge status-refunded">PHONE MISSING</span>{% endif %}</article>{% else %}<p class="empty-state">NO USER CONTACTS YET.</p>{% endfor %}</section>{% endblock %}

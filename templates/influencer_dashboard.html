@@ -4,6 +4,7 @@
 {% block header_title %}SELECTED. ACTIVATED. PAID.{% endblock %}
 {% block header_subtitle %}Track applications, paid assignments, Viral Place review feedback, and payout status.{% endblock %}
 {% block content %}
+{% if not current_user.phone_number %}<section class="verification-strip status-rejected"><span>PRIVATE CONTACT</span><strong>PHONE REQUIRED</strong><p>Add an active number so operations can reach you about assignments and payouts.</p><a class="button-primary compact" href="{{ url_for('profile.edit_profile') }}">ADD PHONE</a></section>{% endif %}
 <section class="verification-strip status-{{ current_user.creator_profile.verification_status }}"><span>SOCIAL OWNERSHIP</span><strong>{{ current_user.creator_profile.verification_status|upper }}</strong>{% if current_user.creator_profile.verification_status != 'verified' %}<p>Add <b>{{ current_user.creator_profile.verification_code }}</b> to your linked social bio while Viral Place reviews control of the account.</p>{% endif %}</section>
 <div class="page-actions"><a class="button-primary" href="{{ url_for('campaigns.list_campaigns') }}">BROWSE CAMPAIGNS</a><a class="button-secondary" href="{{ url_for('creators.onboarding') }}">EDIT PROFILE</a></div>
 <section class="dashboard-metrics"><div><strong>{{ applications|length }}</strong><span>APPLICATIONS</span></div><div><strong>{{ orders|length }}</strong><span>ASSIGNMENTS</span></div><div><strong>{{ orders|selectattr('payout_status','equalto','paid')|list|length }}</strong><span>PAID OUT</span></div></section>

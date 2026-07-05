@@ -15,9 +15,6 @@ def ensure_admin_account() -> None:
         return
     admin = User.query.filter_by(email=email).first()
     if admin:
-        if admin.role != "admin":
-            admin.role = "admin"
-            db.session.commit()
         return
     admin = User(
         first_name="Viral",

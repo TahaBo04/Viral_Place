@@ -26,12 +26,23 @@ def _user(email: str, first_name: str, last_name: str, role: str, **kwargs) -> U
 
 
 def seed_demo_data() -> None:
+    existing_users = {
+        "brand@viralplace.local": "+212612345601",
+        "lina@viralplace.local": "+212612345602",
+        "samir@viralplace.local": "+33612345603",
+    }
     if User.query.filter_by(email="brand@viralplace.local").first():
+        for email, phone_number in existing_users.items():
+            user = User.query.filter_by(email=email).first()
+            if user and not user.phone_number:
+                user.phone_number = phone_number
+                user.phone_confirmed_at = db.func.now()
+        db.session.commit()
         return
 
-    brand = _user("brand@viralplace.local", "Maya", "Brands", "business", company_name="Northstar Labs", company_website="https://example.com")
-    lina = _user("lina@viralplace.local", "Lina", "Reels", "influencer", social_profile_url="https://instagram.com/lina.reels")
-    samir = _user("samir@viralplace.local", "Samir", "Fit", "influencer", social_profile_url="https://instagram.com/samir.fit")
+    brand = _user("brand@viralplace.local", "Maya", "Brands", "business", company_name="Northstar Labs", company_website="https://example.com", phone_number="+212612345601", phone_confirmed_at=db.func.now())
+    lina = _user("lina@viralplace.local", "Lina", "Reels", "influencer", social_profile_url="https://instagram.com/lina.reels", phone_number="+212612345602", phone_confirmed_at=db.func.now())
+    samir = _user("samir@viralplace.local", "Samir", "Fit", "influencer", social_profile_url="https://instagram.com/samir.fit", phone_number="+33612345603", phone_confirmed_at=db.func.now())
 
     profiles = [
         CreatorProfile(user_id=lina.id, display_name="Lina Reels", niche="Beauty", platforms="TikTok, Instagram", audience_country="Morocco", followers=184000, engagement_rate=6.8, starting_rate=900, media_kit_summary="Fast product education, before-and-after routines, and high-save beauty tutorials.", portfolio_url="https://instagram.com/lina.reels", social_proof_url="https://instagram.com/lina.reels", verification_code="VP-DEMO01", verification_status="verified"),

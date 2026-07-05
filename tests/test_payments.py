@@ -23,6 +23,7 @@ class PaymentWebhookTests(unittest.TestCase):
             SQLALCHEMY_TRACK_MODIFICATIONS = False
             SQLALCHEMY_ENGINE_OPTIONS = {}
             SESSION_COOKIE_SECURE = False
+            WTF_CSRF_ENABLED = False
 
         self.client = create_app(TestConfig).test_client()
 

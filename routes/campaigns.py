@@ -29,6 +29,9 @@ def new_campaign():
     if not is_business():
         flash("Use a business account to create a campaign.", "danger")
         return redirect(url_for("campaigns.list_campaigns"))
+    if not current_user.phone_number:
+        flash("Add an active phone number before starting a campaign.", "warning")
+        return redirect(url_for("profile.edit_profile"))
 
     if request.method == "POST":
         flow_type = request.form.get("flow_type", "marketplace")
@@ -96,6 +99,9 @@ def apply(campaign_id):
     if current_user.creator_profile is None:
         flash("Complete your creator profile before applying.", "warning")
         return redirect(url_for("creators.onboarding"))
+    if not current_user.phone_number:
+        flash("Add an active phone number before applying to a campaign.", "warning")
+        return redirect(url_for("profile.edit_profile"))
     if current_user.creator_profile.verification_status != "verified":
         flash("Viral Place must confirm control of your social account before you can apply.", "warning")
         return redirect(url_for("creators.onboarding"))
@@ -130,6 +136,9 @@ def select_creator(campaign_id, application_id):
     if current_user.id != campaign.business_id:
         return "Access denied", 403
     application = Application.query.filter_by(id=application_id, campaign_id=campaign.id).first_or_404()
+    if not current_user.phone_number or not application.creator_profile.user.phone_number:
+        flash("Both parties need active phone contacts before selection.", "warning")
+        return redirect(url_for("campaigns.campaign_detail", campaign_id=campaign.id))
     if application.order:
         return redirect(url_for("orders.order_detail", order_id=application.order.id))
     order = select_application(application, campaign.budget_max * 100, current_user.id)

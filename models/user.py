@@ -20,6 +20,8 @@ class User(db.Model, UserMixin):
     social_profile_url = db.Column(db.String(255))
     profile_picture = db.Column(db.String(255))
     bio = db.Column(db.Text)
+    phone_number = db.Column(db.String(32))
+    phone_confirmed_at = db.Column(db.DateTime)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_login_at = db.Column(db.DateTime)
@@ -32,6 +34,7 @@ class User(db.Model, UserMixin):
     )
     campaigns = db.relationship("Campaign", back_populates="business", cascade="all, delete-orphan")
     notifications = db.relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    deal_reviews = db.relationship("DealReview", back_populates="reviewer", cascade="all, delete-orphan")
 
     @property
     def display_name(self) -> str:

@@ -6,7 +6,7 @@
 {% block header_subtitle %}{{ 'Create briefs immediately, choose creators, and manage every paid campaign from the Brand Hub.' if is_brand else 'Build your creator identity, prove control of your social profile, and apply to matched campaigns.' }}{% endblock %}
 {% block content %}
 <section class="form-section">
-  <form method="post" class="form-card" novalidate>
+  <form method="post" class="form-card" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="role" value="{{ portal_role }}">
     <div class="portal-form-label">{{ 'BRAND / COMPANY REGISTRATION' if is_brand else 'INFLUENCER REGISTRATION' }}</div>
     <div class="two-col">
@@ -20,7 +20,9 @@
       {% else %}
         <label class="span-2">PRIMARY SOCIAL PROFILE<input type="url" name="social_profile_url" value="{{ request.form.get('social_profile_url','') }}" placeholder="Instagram, TikTok, or YouTube profile" required></label>
       {% endif %}
+      <label class="span-2">ACTIVE PHONE NUMBER<input type="tel" name="phone_number" value="{{ request.form.get('phone_number','') }}" placeholder="+212612345678" autocomplete="tel" required></label>
     </div>
+    <label class="check-row"><input type="checkbox" name="phone_active_confirmed" required><span>I CONFIRM THIS NUMBER IS ACTIVE AND VIRAL PLACE MAY CONTACT ME ABOUT MY DEALS.</span></label>
     <button class="button-primary" type="submit">{{ 'CREATE BRAND ACCOUNT' if is_brand else 'CREATE INFLUENCER ACCOUNT' }}</button>
     <p class="form-note">{{ 'Companies enter immediately with no identity approval delay.' if is_brand else 'Creators complete social account ownership review before appearing in discovery.' }}</p>
     <p class="form-note">WRONG ACCOUNT TYPE? <a href="{{ url_for('auth.register', account_type='influencer' if is_brand else 'business') }}">SWITCH TO {{ 'INFLUENCER' if is_brand else 'BRAND' }} SIGNUP</a></p>

@@ -12,6 +12,9 @@ Viral Place is Viral Talent's managed creator marketplace. Companies can publish
 - In-app selection, payment, revision, approval, refund, and payout notifications.
 - Creator video-link submission, Viral Place quality control, and approved customer delivery.
 - Operations dashboard for creator verification, assignment, payment, content review, refunds, and payouts.
+- Private, self-confirmed international phone contacts for brands and influencers.
+- One private post-deal review per party after completion or refund.
+- CSRF-protected forms, throttled login attempts, hardened response headers, and a separate operations access code.
 
 ## Local setup
 
@@ -33,7 +36,9 @@ Demo users use the password `viralplace123`:
 
 ## Production configuration
 
-The Vercel deployment uses PostgreSQL through `DATABASE_URL` or `POSTGRES_URL`. Configure `SECRET_KEY`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`. Stripe checkout additionally requires `STRIPE_SECRET_KEY`; signed webhooks use `STRIPE_WEBHOOK_SECRET`.
+The Vercel deployment uses PostgreSQL through `DATABASE_URL` or `POSTGRES_URL`. Configure `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a distinct `ADMIN_ACCESS_CODE`. Admin accounts can sign in only at `/auth/login/admin` with both the password and access code. Stripe checkout additionally requires `STRIPE_SECRET_KEY`; signed webhooks use `STRIPE_WEBHOOK_SECRET`.
+
+Phone numbers are normalized to international `+` format and shown only to Viral Place operations. The confirmation checkbox is a user attestation, not carrier-level SMS verification. Add an SMS provider before treating numbers as technically verified.
 
 Do not enable `VIRAL_PLACE_DEMO` in production.
 
@@ -43,6 +48,6 @@ Do not enable `VIRAL_PLACE_DEMO` in production.
 - `/auth/login`, `/auth/login/business`, `/auth/login/influencer`
 - `/creators/`, `/campaigns/`, `/campaigns/new`
 - `/business/dashboard`, `/influencer/dashboard`
-- `/orders/<id>`, `/notifications/`
-- `/admin/`
+- `/orders/<id>`, `/orders/<id>/review`, `/notifications/`
+- `/admin/`, `/admin/contacts`, `/auth/login/admin`
 - `/payments/stripe/webhook`

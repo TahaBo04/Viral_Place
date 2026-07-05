@@ -39,6 +39,7 @@ class Order(db.Model):
     creator_profile = db.relationship("CreatorProfile", backref="orders")
     submissions = db.relationship("Submission", back_populates="order", cascade="all, delete-orphan")
     events = db.relationship("OrderEvent", back_populates="order", cascade="all, delete-orphan")
+    reviews = db.relationship("DealReview", back_populates="order", cascade="all, delete-orphan")
 
     __table_args__ = (
         db.UniqueConstraint("campaign_id", "creator_profile_id", name="uq_campaign_creator_order"),

@@ -12,6 +12,7 @@ class AuthPortalTests(unittest.TestCase):
             SQLALCHEMY_TRACK_MODIFICATIONS = False
             SQLALCHEMY_ENGINE_OPTIONS = {}
             SESSION_COOKIE_SECURE = False
+            WTF_CSRF_ENABLED = False
 
         self.app = create_app(TestConfig)
         initialize_database(self.app)
@@ -27,6 +28,8 @@ class AuthPortalTests(unittest.TestCase):
                 "password": "BrandPass123!",
                 "company_name": "Portal Brand",
                 "company_website": "https://example.com",
+                "phone_number": "+212612345610",
+                "phone_active_confirmed": "on",
             },
         )
 
@@ -39,6 +42,8 @@ class AuthPortalTests(unittest.TestCase):
                 "email": "creator-portal@test.local",
                 "password": "CreatorPass123!",
                 "social_profile_url": "https://instagram.com/creator",
+                "phone_number": "+212612345611",
+                "phone_active_confirmed": "on",
             },
         )
 

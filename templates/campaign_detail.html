@@ -30,7 +30,7 @@
       <article class="pipeline-row">
         <span class="score">{{ application.match_score }}%</span>
         <div><h3>{{ application.creator_profile.display_name }}</h3><p>{{ application.message or 'No message supplied.' }}</p><small>{{ application.creator_profile.niche }} • {{ application.status.replace('_',' ') }}</small></div>
-        {% if application.status in ['pending','shortlisted'] %}<form method="post" action="{{ url_for('campaigns.select_creator', campaign_id=campaign.id, application_id=application.id) }}"><button class="button-primary compact" type="submit">SELECT & PAY</button></form>{% elif application.order %}<a class="button-secondary compact" href="{{ url_for('orders.order_detail', order_id=application.order.id) }}">OPEN ORDER</a>{% endif %}
+        {% if application.status in ['pending','shortlisted'] %}<form method="post" action="{{ url_for('campaigns.select_creator', campaign_id=campaign.id, application_id=application.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button-primary compact" type="submit">SELECT & PAY</button></form>{% elif application.order %}<a class="button-secondary compact" href="{{ url_for('orders.order_detail', order_id=application.order.id) }}">OPEN ORDER</a>{% endif %}
       </article>
     {% endfor %}
   </div>

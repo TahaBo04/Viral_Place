@@ -14,6 +14,8 @@ Viral Place is a Flask/Jinja application with SQLAlchemy persistence, Flask-Logi
 | `Submission` | Versioned creator content sent to Viral Place review |
 | `OrderEvent` | Customer-visible and operations timeline |
 | `Notification` | In-app workflow alerts |
+| `DealReview` | Private post-deal feedback from each order participant |
+| `AuthThrottle` | Database-backed email and IP login throttling |
 
 ## State flow
 
@@ -23,8 +25,11 @@ Viral Place is a Flask/Jinja application with SQLAlchemy persistence, Flask-Logi
 4. The creator is notified and submits a secure delivery URL.
 5. Operations approves and delivers, requests revision, or refunds the customer.
 6. Approved work moves the influencer payout to `ready`; operations records payout completion.
+7. After completion or refund, each participant may send one private rating and comment to operations.
 
 Businesses do not require identity verification. Creators prove control of a social account by placing their generated Viral Place code in the linked profile until an admin approves it.
+
+Both account types must provide an international phone number before campaign selection. Numbers are private to operations and self-confirmed by the user. Admin authentication is isolated to its own portal and requires a password plus a separately configured operations access code. All browser forms use CSRF tokens, login failures are throttled in the shared database, sensitive HTML responses are not cached, and operations state changes are written to the audit log.
 
 ## Deployment
 

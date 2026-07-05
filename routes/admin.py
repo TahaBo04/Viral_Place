@@ -7,9 +7,12 @@ from flask_login import current_user, login_required
 from extensions import db
 from models.creator import CreatorProfile
 from models.order import Order, Submission
+from models.review import DealReview
+from models.user import User
 from services.notification_service import notify
 from services.order_service import add_order_event, assign_creator, mark_order_paid
 from services.payment_service import refund_order
+from services.logging_service import log_audit_event
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -29,13 +32,22 @@ def admin_required(func):
 def dashboard():
     orders = Order.query.order_by(Order.updated_at.desc()).all()
     pending_creators = CreatorProfile.query.filter_by(verification_status="pending").order_by(CreatorProfile.updated_at.asc()).all()
+    recent_reviews = DealReview.query.order_by(DealReview.created_at.desc()).limit(20).all()
     counts = {
         "awaiting_payment": sum(o.payment_status == "unpaid" for o in orders),
         "paid_unassigned": sum(o.status == "paid_unassigned" for o in orders),
         "under_review": sum(o.status == "under_review" for o in orders),
         "ready_payout": sum(o.payout_status == "ready" for o in orders),
     }
-    return render_template("admin_dashboard.html", orders=orders, counts=counts, pending_creators=pending_creators)
+    return render_template("admin_dashboard.html", orders=orders, counts=counts, pending_creators=pending_creators, recent_reviews=recent_reviews)
+
+
+@admin_bp.route("/contacts")
+@login_required
+@admin_required
+def contacts():
+    users = User.query.filter(User.role.in_(("business", "influencer"))).order_by(User.created_at.desc()).all()
+    return render_template("admin_contacts.html", users=users)
 
 
 @admin_bp.route("/creators/<int:creator_id>/verification", methods=["POST"])
@@ -61,6 +73,14 @@ def review_creator(creator_id):
         flash("Choose approve or return for correction.", "danger")
         return redirect(url_for("admin.dashboard"))
     db.session.commit()
+    log_audit_event(
+        "creator_verification_reviewed",
+        f"Creator verification was {creator.verification_status}.",
+        actor_user_id=current_user.id,
+        target_user_id=creator.user_id,
+        creator_profile_id=creator.id,
+        metadata={"action": action},
+    )
     return redirect(url_for("admin.dashboard"))
 
 
@@ -84,6 +104,15 @@ def assign(order_id):
     except ValueError as exc:
         flash(str(exc), "danger")
         return redirect(url_for("admin.order_detail", order_id=order.id))
+    log_audit_event(
+        "creator_assigned",
+        "Operations assigned a creator to an order.",
+        actor_user_id=current_user.id,
+        target_user_id=creator.user_id,
+        campaign_id=order.campaign_id,
+        creator_profile_id=creator.id,
+        order_id=order.id,
+    )
     flash("Creator assigned. If payment is secured, they were notified immediately.", "success")
     return redirect(url_for("admin.order_detail", order_id=order.id))
 
@@ -94,6 +123,13 @@ def assign(order_id):
 def mark_paid(order_id):
     order = Order.query.get_or_404(order_id)
     mark_order_paid(order, payment_intent_id=request.form.get("reference", "manual"), actor_id=current_user.id)
+    log_audit_event(
+        "manual_payment_confirmed",
+        "Operations manually confirmed customer payment.",
+        actor_user_id=current_user.id,
+        campaign_id=order.campaign_id,
+        order_id=order.id,
+    )
     flash("Payment marked as received and workflow activated.", "success")
     return redirect(url_for("admin.order_detail", order_id=order.id))
 
@@ -143,6 +179,15 @@ def review_submission(order_id, submission_id):
         return redirect(url_for("admin.order_detail", order_id=order.id))
 
     db.session.commit()
+    log_audit_event(
+        "submission_reviewed",
+        f"Operations completed a submission review with action: {action}.",
+        actor_user_id=current_user.id,
+        target_user_id=order.influencer_id,
+        campaign_id=order.campaign_id,
+        order_id=order.id,
+        metadata={"action": action, "submission_id": submission.id},
+    )
     return redirect(url_for("admin.order_detail", order_id=order.id))
 
 
@@ -161,5 +206,13 @@ def mark_payout(order_id):
     if order.influencer_id:
         notify(order.influencer_id, "Payout sent", f"Your ${order.payout} payout for {order.campaign.title} was sent.", f"/orders/{order.id}")
     db.session.commit()
+    log_audit_event(
+        "creator_payout_confirmed",
+        "Operations marked the creator payout as paid.",
+        actor_user_id=current_user.id,
+        target_user_id=order.influencer_id,
+        campaign_id=order.campaign_id,
+        order_id=order.id,
+    )
     flash("Influencer payout marked as paid.", "success")
     return redirect(url_for("admin.order_detail", order_id=order.id))
