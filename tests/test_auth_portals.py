@@ -1,6 +1,7 @@
 import unittest
 
 from app import create_app, initialize_database
+from models.creator import CreatorProfile
 from models.user import User
 
 
@@ -103,6 +104,30 @@ class AuthPortalTests(unittest.TestCase):
         with self.app.app_context():
             user = User.query.filter_by(email="brand-portal@test.local").first()
             self.assertEqual(user.phone_number, "+212612345619")
+
+    def test_creator_can_complete_onboarding_after_registration(self):
+        self.register_creator()
+        response = self.client.post(
+            "/creators/onboarding",
+            data={
+                "display_name": "Creator One",
+                "niche": "Technology",
+                "audience_country": "Morocco",
+                "engagement_rate": "4.5",
+                "starting_rate": "250",
+                "portfolio_url": "https://example.com/portfolio",
+                "media_kit_summary": "A production-ready technology creator.",
+                "platforms": "instagram",
+                "social_url_instagram": "https://instagram.com/creator",
+                "audience_count_instagram": "12000",
+                "primary_platform": "instagram",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            profile = CreatorProfile.query.one()
+            self.assertEqual(profile.platforms, "Instagram")
+            self.assertEqual(profile.followers, 12000)
 
 
 if __name__ == "__main__":

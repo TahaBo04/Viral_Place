@@ -58,6 +58,7 @@ def onboarding():
             profile = CreatorProfile(
                 user_id=current_user.id,
                 display_name=current_user.display_name,
+                platforms="",
                 verification_code=f"VP-{secrets.token_hex(3).upper()}",
             )
             db.session.add(profile)
