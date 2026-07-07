@@ -8,6 +8,7 @@ class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     flow_type = db.Column(db.String(20), default="marketplace", nullable=False)
+    visibility = db.Column(db.String(20), default="public", nullable=False, index=True)
 
     title = db.Column(db.String(140), nullable=False)
     industry = db.Column(db.String(80), nullable=False)
@@ -20,6 +21,7 @@ class Campaign(db.Model):
     brief = db.Column(db.Text, nullable=False)
     deliverables = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(30), default="open", nullable=False, index=True)
+    closed_at = db.Column(db.DateTime)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -27,7 +29,12 @@ class Campaign(db.Model):
     business = db.relationship("User", back_populates="campaigns")
     applications = db.relationship("Application", back_populates="campaign", cascade="all, delete-orphan")
     orders = db.relationship("Order", back_populates="campaign", cascade="all, delete-orphan")
+    offers = db.relationship("CollaborationOffer", back_populates="campaign", cascade="all, delete-orphan")
 
     @property
     def platform_list(self) -> list[str]:
         return [item.strip() for item in (self.target_platforms or "").split(",") if item.strip()]
+
+    @property
+    def is_open(self) -> bool:
+        return self.status == "open" and self.closed_at is None

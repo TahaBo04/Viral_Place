@@ -5,6 +5,7 @@ from models.campaign import Campaign
 from models.collaboration import Application
 from models.creator import CreatorProfile
 from models.user import User
+from models.social import CreatorSocialAccount
 from services.matching_service import calculate_match_score
 
 
@@ -40,9 +41,16 @@ def seed_demo_data() -> None:
         db.session.commit()
         return
 
-    brand = _user("brand@viralplace.local", "Maya", "Brands", "business", company_name="Northstar Labs", company_website="https://example.com", phone_number="+212612345601", phone_confirmed_at=db.func.now())
-    lina = _user("lina@viralplace.local", "Lina", "Reels", "influencer", social_profile_url="https://instagram.com/lina.reels", phone_number="+212612345602", phone_confirmed_at=db.func.now())
-    samir = _user("samir@viralplace.local", "Samir", "Fit", "influencer", social_profile_url="https://instagram.com/samir.fit", phone_number="+33612345603", phone_confirmed_at=db.func.now())
+    brand = _user("brand@viralplace.local", "Maya", "Brands", "business", company_name="Northstar Labs", company_website="https://example.com", phone_number="+212612345601", phone_region="MA", phone_confirmed_at=db.func.now())
+    lina = _user("lina@viralplace.local", "Lina", "Reels", "influencer", social_profile_url="https://instagram.com/lina.reels", phone_number="+212612345602", phone_region="MA", phone_confirmed_at=db.func.now())
+    samir = _user("samir@viralplace.local", "Samir", "Fit", "influencer", social_profile_url="https://instagram.com/samir.fit", phone_number="+33612345603", phone_region="FR", phone_confirmed_at=db.func.now())
+
+    db.session.add_all([
+        CreatorSocialAccount(user_id=lina.id, platform="instagram", profile_url="https://instagram.com/lina.reels", audience_count=184000, is_primary=True),
+        CreatorSocialAccount(user_id=lina.id, platform="tiktok", profile_url="https://tiktok.com/@lina.reels", audience_count=126000),
+        CreatorSocialAccount(user_id=samir.id, platform="instagram", profile_url="https://instagram.com/samir.fit", audience_count=92000, is_primary=True),
+        CreatorSocialAccount(user_id=samir.id, platform="youtube", profile_url="https://youtube.com/@samirfit", audience_count=61000),
+    ])
 
     profiles = [
         CreatorProfile(user_id=lina.id, display_name="Lina Reels", niche="Beauty", platforms="TikTok, Instagram", audience_country="Morocco", followers=184000, engagement_rate=6.8, starting_rate=900, media_kit_summary="Fast product education, before-and-after routines, and high-save beauty tutorials.", portfolio_url="https://instagram.com/lina.reels", social_proof_url="https://instagram.com/lina.reels", verification_code="VP-DEMO01", verification_status="verified"),
@@ -57,14 +65,15 @@ def seed_demo_data() -> None:
         title="Launch a Gen Z skincare routine",
         industry="Beauty",
         target_niche="Beauty",
-        target_platforms="TikTok, Instagram",
+        target_platforms="tiktok,instagram",
         target_country="Morocco",
         budget_min=600,
         budget_max=1600,
         goal="Drive creator-led awareness and trackable visits.",
         brief="Create authentic short-form videos showing the morning routine, texture, and product benefit.",
         deliverables="2 TikToks, 1 Instagram Reel, 3 story frames, 30-day paid usage rights.",
-        status="awaiting_selection",
+        status="open",
+        visibility="public",
     )
     db.session.add(campaign)
     db.session.flush()

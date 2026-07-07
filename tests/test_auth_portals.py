@@ -29,7 +29,8 @@ class AuthPortalTests(unittest.TestCase):
                 "password": "BrandPass123!",
                 "company_name": "Portal Brand",
                 "company_website": "https://example.com",
-                "phone_number": "+212612345610",
+                "phone_region": "MA",
+                "phone_national_number": "0612345610",
                 "phone_active_confirmed": "on",
             },
         )
@@ -42,8 +43,12 @@ class AuthPortalTests(unittest.TestCase):
                 "last_name": "One",
                 "email": "creator-portal@test.local",
                 "password": "CreatorPass123!",
-                "social_profile_url": "https://instagram.com/creator",
-                "phone_number": "+212612345611",
+                "platforms": "instagram",
+                "social_url_instagram": "https://instagram.com/creator",
+                "audience_count_instagram": "12000",
+                "primary_platform": "instagram",
+                "phone_region": "MA",
+                "phone_national_number": "0612345611",
                 "phone_active_confirmed": "on",
             },
         )
@@ -52,8 +57,8 @@ class AuthPortalTests(unittest.TestCase):
         brand_form = self.client.get("/auth/register/business").data
         creator_form = self.client.get("/auth/register/influencer").data
         self.assertIn(b'name="company_name"', brand_form)
-        self.assertNotIn(b'name="social_profile_url"', brand_form)
-        self.assertIn(b'name="social_profile_url"', creator_form)
+        self.assertNotIn(b'name="social_url_instagram"', brand_form)
+        self.assertIn(b'name="social_url_instagram"', creator_form)
         self.assertNotIn(b'name="company_name"', creator_form)
 
     def test_accounts_only_enter_through_their_own_portal(self):
@@ -88,7 +93,8 @@ class AuthPortalTests(unittest.TestCase):
                 "last_name": "Owner",
                 "company_name": "Portal Brand",
                 "company_website": "https://example.com",
-                "phone_number": "+212612345619",
+                "phone_region": "MA",
+                "phone_national_number": "0612345619",
                 "phone_active_confirmed": "on",
                 "bio": "Updated contact details.",
             },

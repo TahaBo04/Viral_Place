@@ -19,7 +19,7 @@ def stripe_webhook():
         session = stripe_object_dict(event["data"]["object"])
         order_id = session.get("metadata", {}).get("order_id")
         order = Order.query.get(int(order_id)) if order_id else None
-        if order:
+        if order and order.offer and order.offer.status == "accepted":
             mark_order_paid(order, str(session.get("payment_intent") or ""))
     elif event["type"] == "charge.refunded":
         charge = stripe_object_dict(event["data"]["object"])

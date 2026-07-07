@@ -3,29 +3,29 @@
 {% block title %}Join as {{ 'a brand' if is_brand else 'an influencer' }} · Viral Place{% endblock %}
 {% block eyebrow %}{{ 'INSTANT BUSINESS ACCESS' if is_brand else 'CREATOR APPLICATION' }}{% endblock %}
 {% block header_title %}{{ 'LAUNCH WITH CREATORS.' if is_brand else 'TURN REACH INTO PAID WORK.' }}{% endblock %}
-{% block header_subtitle %}{{ 'Create briefs immediately, choose creators, and manage every paid campaign from the Brand Hub.' if is_brand else 'Build your creator identity, prove control of your social profile, and apply to matched campaigns.' }}{% endblock %}
+{% block header_subtitle %}{{ 'Create briefs immediately, choose creators, and manage every accepted campaign from the Brand Hub.' if is_brand else 'Link at least one real social account, build your creator identity, and apply to matched campaigns.' }}{% endblock %}
 {% block content %}
-<section class="form-section">
-  <form method="post" class="form-card" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="role" value="{{ portal_role }}">
-    <div class="portal-form-label">{{ 'BRAND / COMPANY REGISTRATION' if is_brand else 'INFLUENCER REGISTRATION' }}</div>
-    <div class="two-col">
-      <label>FIRST NAME<input name="first_name" value="{{ request.form.get('first_name','') }}" autocomplete="given-name" required></label>
-      <label>LAST NAME<input name="last_name" value="{{ request.form.get('last_name','') }}" autocomplete="family-name" required></label>
-      <label>{{ 'WORK EMAIL' if is_brand else 'CREATOR EMAIL' }}<input type="email" name="email" value="{{ request.form.get('email','') }}" autocomplete="email" required></label>
-      <label>PASSWORD<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
-      {% if is_brand %}
-        <label>COMPANY / BRAND NAME<input name="company_name" value="{{ request.form.get('company_name','') }}" required></label>
-        <label>COMPANY WEBSITE<input type="url" name="company_website" value="{{ request.form.get('company_website','') }}" placeholder="https://"></label>
-      {% else %}
-        <label class="span-2">PRIMARY SOCIAL PROFILE<input type="url" name="social_profile_url" value="{{ request.form.get('social_profile_url','') }}" placeholder="Instagram, TikTok, or YouTube profile" required></label>
-      {% endif %}
-      <label class="span-2">ACTIVE PHONE NUMBER<input type="tel" name="phone_number" value="{{ request.form.get('phone_number','') }}" placeholder="+212612345678" autocomplete="tel" required></label>
-    </div>
-    <label class="check-row"><input type="checkbox" name="phone_active_confirmed" required><span>I CONFIRM THIS NUMBER IS ACTIVE AND VIRAL PLACE MAY CONTACT ME ABOUT MY DEALS.</span></label>
-    <button class="button-primary" type="submit">{{ 'CREATE BRAND ACCOUNT' if is_brand else 'CREATE INFLUENCER ACCOUNT' }}</button>
-    <p class="form-note">{{ 'Companies enter immediately with no identity approval delay.' if is_brand else 'Creators complete social account ownership review before appearing in discovery.' }}</p>
-    <p class="form-note">WRONG ACCOUNT TYPE? <a href="{{ url_for('auth.register', account_type='influencer' if is_brand else 'business') }}">SWITCH TO {{ 'INFLUENCER' if is_brand else 'BRAND' }} SIGNUP</a></p>
-  </form>
-</section>
+<section class="form-section"><form method="post" class="form-card" novalidate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="role" value="{{ portal_role }}">
+  <div class="portal-form-label">{{ 'BRAND / COMPANY REGISTRATION' if is_brand else 'INFLUENCER REGISTRATION' }}</div>
+  <div class="two-col">
+    <label>FIRST NAME<input name="first_name" value="{{ request.form.get('first_name','') }}" autocomplete="given-name" required></label>
+    <label>LAST NAME<input name="last_name" value="{{ request.form.get('last_name','') }}" autocomplete="family-name" required></label>
+    <label>{{ 'WORK EMAIL' if is_brand else 'CREATOR EMAIL' }}<input type="email" name="email" value="{{ request.form.get('email','') }}" autocomplete="email" required></label>
+    <label>PASSWORD<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+    {% if is_brand %}<label>COMPANY / BRAND NAME<input name="company_name" value="{{ request.form.get('company_name','') }}" required></label><label>COMPANY WEBSITE<input type="url" name="company_website" value="{{ request.form.get('company_website','') }}" placeholder="https://"></label>{% endif %}
+    <label class="span-2">PROFILE PICTURE URL <span class="optional">OPTIONAL</span><input type="url" name="profile_picture" value="{{ request.form.get('profile_picture','') }}" placeholder="https://images.example.com/profile.jpg"></label>
+    <label>COUNTRY / CALLING CODE<select name="phone_region" required><option value="">Select country</option>{% for item in phone_country_catalog %}<option value="{{ item.region }}" {% if request.form.get('phone_region') == item.region %}selected{% endif %}>{{ item.name }} ({{ item.dial_code }})</option>{% endfor %}</select></label>
+    <label>ACTIVE PHONE NUMBER<input type="tel" name="phone_national_number" value="{{ request.form.get('phone_national_number','') }}" placeholder="Local number without country code" autocomplete="tel-national" required></label>
+  </div>
+  {% if not is_brand %}
+  <fieldset class="social-fieldset"><legend>LINK AT LEAST ONE SOCIAL ACCOUNT</legend><p class="form-note">Use official profile links and enter the audience shown on each platform.</p>
+    <div class="platform-picker">{% for key, label in platform_catalog %}<label class="platform-choice"><input type="checkbox" name="platforms" value="{{ key }}" data-platform-toggle="{{ key }}" {% if key in request.form.getlist('platforms') %}checked{% endif %}><span>{{ label }}</span></label>{% endfor %}</div>
+    {% for key, label in platform_catalog %}<div class="social-account-row" data-platform-row="{{ key }}"><div class="two-col">{% if key == 'other' %}<label>PLATFORM NAME<input name="other_platform_name" value="{{ request.form.get('other_platform_name','') }}" maxlength="60"></label>{% endif %}<label class="{{ '' if key == 'other' else 'span-2' }}">{{ label|upper }} PROFILE URL<input type="url" name="social_url_{{ key }}" value="{{ request.form.get('social_url_' + key,'') }}" placeholder="https://"></label><label>AUDIENCE COUNT<input type="number" min="0" name="audience_count_{{ key }}" value="{{ request.form.get('audience_count_' + key,'') }}"></label><label class="primary-choice"><input type="radio" name="primary_platform" value="{{ key }}" {% if request.form.get('primary_platform') == key %}checked{% endif %}><span>USE FOR OWNERSHIP REVIEW</span></label></div></div>{% endfor %}
+  </fieldset>
+  {% endif %}
+  <label class="check-row"><input type="checkbox" name="phone_active_confirmed" required><span>I CONFIRM THIS NUMBER IS ACTIVE AND VIRAL PLACE MAY CONTACT ME ABOUT MY DEALS.</span></label>
+  <button class="button-primary" type="submit">{{ 'CREATE BRAND ACCOUNT' if is_brand else 'CREATE INFLUENCER ACCOUNT' }}</button>
+  <p class="form-note">{{ 'Companies enter immediately with no identity approval delay.' if is_brand else 'Creators complete social account ownership review before appearing in discovery.' }}</p>
+  <p class="form-note">WRONG ACCOUNT TYPE? <a href="{{ url_for('auth.register', account_type='influencer' if is_brand else 'business') }}">SWITCH TO {{ 'INFLUENCER' if is_brand else 'BRAND' }} SIGNUP</a></p>
+</form></section>
 {% endblock %}

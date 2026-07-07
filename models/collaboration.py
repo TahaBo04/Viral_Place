@@ -23,7 +23,12 @@ class Application(db.Model):
     creator_profile = db.relationship("CreatorProfile", back_populates="applications")
     sender = db.relationship("User", backref="sent_applications")
     order = db.relationship("Order", back_populates="application", uselist=False)
+    offers = db.relationship("CollaborationOffer", back_populates="application", cascade="all, delete-orphan", order_by="CollaborationOffer.created_at.desc()")
 
     __table_args__ = (
         db.UniqueConstraint("campaign_id", "creator_profile_id", name="uq_campaign_creator_application"),
     )
+
+    @property
+    def active_offer(self):
+        return next((offer for offer in self.offers if offer.status in ("pending", "accepted")), None)

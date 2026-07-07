@@ -198,6 +198,14 @@ button, input, textarea, select { font: inherit; letter-spacing: 0; }
 .creator-card p, .campaign-card p { color: var(--muted); }
 .avatar { flex: 0 0 auto; width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid var(--lime); border-radius: 50%; color: var(--lime); font-family: "Unbounded", sans-serif; font-weight: 900; box-shadow: 0 0 16px rgba(156, 255, 0, 0.18); }
 .avatar.large { width: 92px; height: 92px; font-size: 28px; }
+.profile-media { position: relative; flex: 0 0 auto; width: 64px; height: 64px; }
+.profile-media.large { width: 132px; height: 132px; }
+.profile-media .avatar { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: var(--radius); }
+.profile-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); }
+.profile-photo.is-broken { display: none; }
+.platform-badge { position: absolute; right: -6px; bottom: -6px; z-index: 2; width: 30px; height: 30px; display: grid; place-items: center; border: 2px solid var(--black); border-radius: 50%; background: var(--white); box-shadow: 0 0 14px rgba(156,255,0,.34); }
+.platform-badge img { width: 17px; height: 17px; }
+.platform-badge strong { color: var(--black); font-size: 12px; }
 .status-dot { flex: 0 0 auto; width: 13px; height: 13px; margin-top: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); }
 .card-topline, .card-footer, .profile-head, .stat-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .card-topline, .card-footer { justify-content: space-between; }
@@ -248,6 +256,11 @@ input::placeholder, textarea::placeholder { color: #777d77; }
 .form-note { margin: 0; color: var(--muted); font-size: 13px; }
 .form-note a { color: var(--lime); }
 .role-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mode-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.mode-switch label { position: relative; }
+.mode-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.mode-switch span { min-height: 60px; display: grid; place-items: center; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); cursor: pointer; text-align: center; }
+.mode-switch input:checked + span { border-color: var(--lime); color: var(--lime); background: var(--lime-soft); }
 .role-switch label { position: relative; }
 .role-switch input { position: absolute; opacity: 0; pointer-events: none; }
 .role-switch span { min-height: 56px; display: grid; place-items: center; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); cursor: pointer; }
@@ -255,6 +268,27 @@ input::placeholder, textarea::placeholder { color: #777d77; }
 .check-row { display: flex; align-items: center; gap: 10px; }
 .check-row input { width: 18px; min-height: 18px; accent-color: var(--lime); }
 .portal-form-label { padding: 14px 16px; border-left: 3px solid var(--lime); background: var(--lime-soft); color: var(--lime); font-size: 12px; font-weight: 900; }
+.optional { color: var(--muted); font-weight: 500; }
+.social-fieldset { margin: 0; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); }
+.social-fieldset legend { padding: 0 8px; color: var(--lime); font-size: 12px; font-weight: 900; }
+.platform-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 18px 0; }
+.platform-choice { position: relative; }
+.platform-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.platform-choice span { min-height: 46px; display: grid; place-items: center; padding: 9px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); cursor: pointer; text-align: center; }
+.platform-choice input:checked + span { border-color: var(--lime); color: var(--lime); background: var(--lime-soft); }
+.social-account-row { margin-top: 12px; padding: 16px; border-left: 3px solid var(--lime); background: rgba(0,0,0,.28); }
+.social-account-row[hidden] { display: none; }
+.primary-choice { display: flex; align-items: center; gap: 8px; }
+.primary-choice input { width: 18px; min-height: 18px; accent-color: var(--lime); }
+.social-links { display: grid; gap: 8px; margin: 22px 0; }
+.social-links a { min-height: 54px; display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--white); text-decoration: none; }
+.social-links a:hover { border-color: var(--lime); }
+.social-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--black); color: var(--lime); }
+.social-icon img { width: 17px; height: 17px; }
+.social-links strong { color: var(--lime); }
+.offer-inline { min-width: min(100%, 320px); display: grid; grid-template-columns: minmax(110px, 1fr) auto; gap: 8px; }
+.offer-inline input, .offer-inline select { min-height: 40px; }
+.offer-summary { display: grid; justify-items: end; gap: 8px; }
 .verification-strip { margin: 0 0 24px; padding: 18px 20px; display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 12px 18px; border: 1px solid var(--line); background: var(--panel); }
 .verification-strip span { color: var(--muted); font-size: 11px; font-weight: 900; }
 .verification-strip strong { color: var(--lime); font-family: "Unbounded", sans-serif; }
@@ -316,7 +350,7 @@ input::placeholder, textarea::placeholder { color: #777d77; }
   .hero-inner { padding: 64px 0 42px; }
   .hero-inner h1, .compact-hero .hero-inner h1 { font-size: 34px; }
   .hero-copy { font-size: 17px; }
-  .pathways, .two-panel, .detail-grid, .two-col, .role-switch, .filter-form, .portal-choice { grid-template-columns: 1fr; }
+  .pathways, .two-panel, .detail-grid, .two-col, .role-switch, .mode-switch, .filter-form, .portal-choice { grid-template-columns: 1fr; }
   .span-2 { grid-column: auto; }
   .pathway { min-height: 360px; padding: 28px; }
   .pathway h2, .section-heading h2 { font-size: 28px; }
@@ -329,6 +363,8 @@ input::placeholder, textarea::placeholder { color: #777d77; }
   .portal-option { min-height: 320px; padding: 28px; }
   .portal-option h2 { font-size: 25px; }
   .verification-strip, .review-compact { grid-template-columns: 1fr; }
+  .platform-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .offer-inline { width: 100%; grid-template-columns: 1fr; }
   .site-footer { grid-template-columns: 1fr; }
   .footer-links { flex-wrap: wrap; }
 }

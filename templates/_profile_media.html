@@ -1,0 +1,12 @@
+{% macro profile_media(user, creator=None, size='') %}
+<div class="profile-media {{ size }}">
+  <span class="avatar {{ 'large' if size else '' }}">{{ user.first_name[:1] }}{{ user.last_name[:1] }}</span>
+  {% if user.profile_picture %}<img class="profile-photo" src="{{ user.profile_picture }}" alt="{{ user.display_name }} profile picture" loading="lazy" referrerpolicy="no-referrer" data-profile-photo>{% endif %}
+  {% if creator and user.social_accounts %}
+    {% set top = user.social_accounts[0] %}
+    <span class="platform-badge" title="{{ top.display_name }} · {{ '{:,}'.format(top.audience_count) }} audience">
+      {% if platform_icon_url(top.platform) %}<img src="{{ platform_icon_url(top.platform) }}" alt="{{ top.display_name }}">{% else %}<strong>O</strong>{% endif %}
+    </span>
+  {% endif %}
+</div>
+{% endmacro %}

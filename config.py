@@ -35,3 +35,4 @@ class Config:
     REMEMBER_COOKIE_DURATION = 60 * 60 * 24 * 14
     PREFERRED_URL_SCHEME = "https" if os.environ.get("VERCEL") else "http"
     WTF_CSRF_TIME_LIMIT = 60 * 60 * 2
+    MAX_OFFER_USD = int(os.environ.get("MAX_OFFER_USD", "1000000"))

@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% from "_profile_media.html" import profile_media with context %}
 {% block title %}Viral Place · Managed creator campaigns{% endblock %}
 {% block body_class %}home-page{% endblock %}
 {% block hero_class %}home-hero{% endblock %}
 {% block eyebrow %}A VIRAL TALENT COMPANY{% endblock %}
 {% block header_title %}THE PLACE WHERE<br>BRANDS MEET CREATORS.{% endblock %}
-{% block header_subtitle %}Brands pay Viral Place. We activate the selected creator, review every video, deliver only approved work, and release creator payouts after quality control.{% endblock %}
+{% block header_subtitle %}Creators accept exact offer terms before brands pay. Viral Place then secures funds, reviews every video, and releases payouts after quality control.{% endblock %}
 {% block hero_actions %}
   <div class="hero-actions">
     <a class="button-primary" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register', account_type='business') }}">START A CAMPAIGN</a>
@@ -25,7 +25,7 @@
     <span class="section-index">02</span>
     <p class="eyebrow">FOR CREATORS</p>
     <h2>APPLY. GET SELECTED.<br>GET PAID.</h2>
-    <p>Apply to niche-matched campaigns. When a brand selects and pays, your Viral Place workspace unlocks the production brief and submission flow.</p>
+    <p>Apply to matched campaigns, review the exact offer and payout, then accept before the brand can secure payment.</p>
     <a class="text-link" href="{{ url_for('campaigns.list_campaigns') }}">BROWSE CAMPAIGNS →</a>
   </article>
 </section>
@@ -51,7 +51,7 @@
   <div class="card-grid">
     {% for creator in creators %}
       <a class="creator-card" href="{{ url_for('creators.creator_detail', creator_id=creator.id) }}">
-        <span class="avatar">{{ creator.display_name[:1] }}</span>
+        {{ profile_media(creator.user, creator) }}
         <div><h3>{{ creator.display_name }}</h3><p>{{ creator.niche }} • {{ creator.platforms }}</p><strong>{{ "{:,}".format(creator.followers) }} FOLLOWERS</strong></div>
       </a>
     {% else %}<p class="empty-state">Creator profiles will appear here.</p>{% endfor %}

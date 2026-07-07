@@ -1,28 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Create campaign · Viral Place{% endblock %}
 {% block eyebrow %}FOR BRANDS{% endblock %}
-{% block header_title %}BUILD THE BRIEF.<br>CHOOSE THE FLOW.{% endblock %}
-{% block header_subtitle %}Use managed sourcing for a done-for-you creator service, or open a marketplace brief and choose from creator applications.{% endblock %}
-{% block content %}
-<section class="form-section">
-  <form method="post" class="form-card"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="role-switch">
-      <label><input type="radio" name="flow_type" value="managed" {% if request.form.get('flow_type') == 'managed' %}checked{% endif %}><span>VIRAL PLACE MANAGED</span></label>
-      <label><input type="radio" name="flow_type" value="marketplace" {% if request.form.get('flow_type','marketplace') == 'marketplace' %}checked{% endif %}><span>OPEN MARKETPLACE</span></label>
-    </div>
-    <div class="two-col">
-      <label>CAMPAIGN TITLE<input name="title" value="{{ request.form.get('title','') }}" required></label>
-      <label>INDUSTRY<input name="industry" value="{{ request.form.get('industry','') }}" placeholder="Beauty, SaaS, food..." required></label>
-      <label>TARGET NICHE<input name="target_niche" value="{{ request.form.get('target_niche','') }}" required></label>
-      <label>TARGET PLATFORMS<input name="target_platforms" value="{{ request.form.get('target_platforms','') }}" placeholder="TikTok, Instagram" required></label>
-      <label>TARGET COUNTRY<input name="target_country" value="{{ request.form.get('target_country','') }}" required></label>
-      <label>BUSINESS GOAL<input name="goal" value="{{ request.form.get('goal','') }}" required></label>
-      <label>MINIMUM BUDGET (USD)<input type="number" name="budget_min" min="1" value="{{ request.form.get('budget_min','500') }}" required></label>
-      <label>FINAL ORDER BUDGET (USD)<input type="number" name="budget_max" min="1" value="{{ request.form.get('budget_max','1500') }}" required></label>
-      <label class="span-2">CAMPAIGN BRIEF<textarea name="brief" rows="6" required>{{ request.form.get('brief','') }}</textarea></label>
-      <label class="span-2">EXPECTED DELIVERABLES<textarea name="deliverables" rows="4" required>{{ request.form.get('deliverables','') }}</textarea></label>
-    </div>
-    <button class="button-primary" type="submit">CREATE CAMPAIGN</button>
-  </form>
-</section>
-{% endblock %}
+{% block header_title %}BUILD THE BRIEF.<br>CHOOSE THE ACCESS.{% endblock %}
+{% block header_subtitle %}Open a public brief, invite creators privately, or ask Viral Place to recommend talent. Payment always waits for creator acceptance.{% endblock %}
+{% block content %}<section class="form-section"><form method="post" class="form-card"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mode-switch">{% for value, label in [('public','PUBLIC MARKETPLACE'),('private','PRIVATE INVITE-ONLY'),('managed','VIRAL PLACE MANAGED')] %}<label><input type="radio" name="campaign_mode" value="{{ value }}" {% if request.form.get('campaign_mode','public') == value %}checked{% endif %}><span>{{ label }}</span></label>{% endfor %}</div>
+  <div class="two-col"><label>CAMPAIGN TITLE<input name="title" value="{{ request.form.get('title','') }}" required></label><label>INDUSTRY<input name="industry" value="{{ request.form.get('industry','') }}" placeholder="Beauty, SaaS, food..." required></label><label>TARGET NICHE<input name="target_niche" value="{{ request.form.get('target_niche','') }}" required></label><label>TARGET COUNTRY<input name="target_country" value="{{ request.form.get('target_country','') }}" required></label><label>BUSINESS GOAL<input name="goal" value="{{ request.form.get('goal','') }}" required></label><label>GUIDE MINIMUM BUDGET (USD)<input type="number" name="budget_min" min="1" value="{{ request.form.get('budget_min','500') }}" required></label><label>GUIDE MAXIMUM BUDGET (USD)<input type="number" name="budget_max" min="1" value="{{ request.form.get('budget_max','1500') }}" required></label><label class="span-2">CAMPAIGN BRIEF<textarea name="brief" rows="6" required>{{ request.form.get('brief','') }}</textarea></label><label class="span-2">EXPECTED DELIVERABLES<textarea name="deliverables" rows="4" required>{{ request.form.get('deliverables','') }}</textarea></label></div>
+  <fieldset class="social-fieldset"><legend>TARGET PLATFORMS</legend><div class="platform-picker">{% for key, label in platform_catalog %}<label class="platform-choice"><input type="checkbox" name="target_platforms" value="{{ key }}" {% if key in request.form.getlist('target_platforms') %}checked{% endif %}><span>{{ label }}</span></label>{% endfor %}</div><label>OTHER PLATFORM NAME<input name="target_platform_other" value="{{ request.form.get('target_platform_other','') }}" maxlength="60"></label></fieldset>
+  <button class="button-primary" type="submit">CREATE CAMPAIGN</button>
+</form></section>{% endblock %}

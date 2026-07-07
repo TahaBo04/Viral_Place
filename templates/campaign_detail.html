@@ -1,45 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ campaign.title }} · Viral Place{% endblock %}
-{% block eyebrow %}{{ campaign.flow_type|upper }} CAMPAIGN{% endblock %}
-{% block header_title %}{{ campaign.title|upper }}{% endblock %}
-{% block header_subtitle %}{{ campaign.goal }}{% endblock %}
-{% block content %}
-<section class="detail-grid">
-  <article class="section-panel">
-    <p class="eyebrow">THE BRIEF</p><h2>{{ campaign.title }}</h2><p class="lead-text">{{ campaign.brief }}</p>
-    <div class="highlight-box"><strong>DELIVERABLES</strong><p>{{ campaign.deliverables }}</p></div>
-    <div class="stat-row"><span>{{ campaign.target_niche }}</span><span>{{ campaign.target_platforms }}</span><span>{{ campaign.target_country }}</span><span>${{ campaign.budget_min }}–${{ campaign.budget_max }}</span></div>
-  </article>
-  <aside class="section-panel action-panel">
-    <p class="eyebrow">STATUS</p><h2>{{ campaign.status.replace('_',' ')|upper }}</h2>
-    {% if current_user.is_authenticated and current_user.role == 'influencer' %}
-      {% if my_application %}<p>Your application is <strong>{{ my_application.status.replace('_',' ') }}</strong>.</p>
-      {% elif current_user.creator_profile %}<a class="button-primary" href="{{ url_for('campaigns.apply', campaign_id=campaign.id) }}">APPLY NOW</a>
-      {% else %}<a class="button-primary" href="{{ url_for('creators.onboarding') }}">BUILD CREATOR PROFILE</a>{% endif %}
-    {% elif current_user.is_authenticated and current_user.id == campaign.business_id %}
-      <a class="button-secondary" href="{{ url_for('creators.list_creators', campaign_id=campaign.id) }}">FIND CREATORS</a>
-    {% else %}<a class="button-primary" href="{{ url_for('auth.login', account_type='influencer') }}">INFLUENCER LOGIN TO APPLY</a>{% endif %}
-  </aside>
-</section>
-
-{% if current_user.is_authenticated and current_user.id == campaign.business_id and campaign.applications %}
-<section class="section-band">
-  <div class="section-heading"><p class="eyebrow">CREATOR APPLICATIONS</p><h2>SELECT WHO MOVES FORWARD.</h2></div>
-  <div class="pipeline-list">
-    {% for application in campaign.applications %}
-      <article class="pipeline-row">
-        <span class="score">{{ application.match_score }}%</span>
-        <div><h3>{{ application.creator_profile.display_name }}</h3><p>{{ application.message or 'No message supplied.' }}</p><small>{{ application.creator_profile.niche }} • {{ application.status.replace('_',' ') }}</small></div>
-        {% if application.status in ['pending','shortlisted'] %}<form method="post" action="{{ url_for('campaigns.select_creator', campaign_id=campaign.id, application_id=application.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button-primary compact" type="submit">SELECT & PAY</button></form>{% elif application.order %}<a class="button-secondary compact" href="{{ url_for('orders.order_detail', order_id=application.order.id) }}">OPEN ORDER</a>{% endif %}
-      </article>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{% if scored_creators and current_user.is_authenticated and current_user.id == campaign.business_id %}
-<section class="section-band"><div class="section-heading"><p class="eyebrow">SMART MATCHING</p><h2>DISCOVER CREATOR FIT.</h2></div><div class="card-grid">
-  {% for creator, score in scored_creators[:6] %}<a class="creator-card" href="{{ url_for('creators.creator_detail', creator_id=creator.id) }}"><span class="score">{{ score }}%</span><div><h3>{{ creator.display_name }}</h3><p>{{ creator.niche }} • {{ creator.platforms }}</p></div></a>{% endfor %}
-</div></section>
-{% endif %}
-{% endblock %}
+{% block title %}{{ campaign.title }} · Viral Place{% endblock %}{% block eyebrow %}{{ campaign.visibility|upper }} {{ campaign.flow_type|upper }} CAMPAIGN{% endblock %}{% block header_title %}{{ campaign.title|upper }}{% endblock %}{% block header_subtitle %}{{ campaign.goal }}{% endblock %}
+{% block content %}<section class="detail-grid"><article class="section-panel"><div class="card-topline"><p class="eyebrow">THE BRIEF</p><span class="tag">{{ campaign.visibility }} • {{ campaign.status }}</span></div><h2>{{ campaign.title }}</h2><p class="lead-text">{{ campaign.brief }}</p><div class="highlight-box"><strong>DELIVERABLES</strong><p>{{ campaign.deliverables }}</p></div><div class="stat-row"><span>{{ campaign.target_niche }}</span>{% for label in campaign_platform_labels(campaign.target_platforms) %}<span>{{ label }}</span>{% endfor %}<span>{{ campaign.target_country }}</span><span>${{ campaign.budget_min }}–${{ campaign.budget_max }} GUIDE</span></div></article>
+  <aside class="section-panel action-panel"><p class="eyebrow">CAMPAIGN CONTROL</p><h2>{{ campaign.status|upper }}</h2>{% if current_user.is_authenticated and current_user.id == campaign.business_id %}<a class="button-secondary" href="{{ url_for('creators.list_creators', campaign_id=campaign.id) }}">FIND CREATORS</a>{% if campaign.is_open %}<form method="post" action="{{ url_for('campaigns.close', campaign_id=campaign.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button-danger" type="submit">CLOSE CAMPAIGN</button></form>{% endif %}{% elif current_user.is_authenticated and current_user.role == 'influencer' %}{% if my_application %}<p>Your connection is <strong>{{ my_application.status.replace('_',' ') }}</strong>.</p>{% elif campaign.visibility == 'public' and campaign.is_open %}<a class="button-primary" href="{{ url_for('campaigns.apply', campaign_id=campaign.id) }}">APPLY NOW</a>{% endif %}{% else %}<a class="button-primary" href="{{ url_for('auth.login', account_type='influencer') }}">INFLUENCER LOGIN TO APPLY</a>{% endif %}</aside></section>
+{% if current_user.is_authenticated and current_user.id == campaign.business_id and campaign.applications %}<section class="section-band"><div class="section-heading"><p class="eyebrow">CREATOR PIPELINE</p><h2>MAKE INDEPENDENT OFFERS.</h2></div><div class="pipeline-list">{% for application in campaign.applications %}{% set active_offer = application.active_offer %}<article class="pipeline-row"><span class="score">{{ application.match_score }}%</span><div><h3>{{ application.creator_profile.display_name }}</h3><p>{{ application.message or 'No message supplied.' }}</p><small>{{ application.direction.replace('_',' ') }} • {{ application.status.replace('_',' ') }} • ${{ application.creator_profile.starting_rate }} minimum</small></div>{% if active_offer %}<div class="offer-summary"><strong>${{ active_offer.amount }}</strong><span class="status-badge">{{ active_offer.status }}</span>{% if active_offer.status == 'pending' %}<form method="post" action="{{ url_for('offers.withdraw', offer_id=active_offer.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button-danger compact" type="submit">WITHDRAW</button></form>{% elif active_offer.order %}<a class="button-secondary compact" href="{{ url_for('orders.order_detail', order_id=active_offer.order.id) }}">OPEN ORDER</a>{% endif %}</div>{% elif campaign.is_open %}<form method="post" action="{{ url_for('campaigns.select_creator', campaign_id=campaign.id, application_id=application.id) }}" class="offer-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="number" name="offer_amount" min="{{ application.creator_profile.starting_rate }}" max="1000000" value="{{ application.creator_profile.starting_rate }}" aria-label="Offer amount in USD" required><button class="button-primary compact" type="submit">SEND OFFER</button></form>{% endif %}</article>{% endfor %}</div></section>{% endif %}
+{% if scored_creators and current_user.is_authenticated and current_user.id == campaign.business_id %}<section class="section-band"><div class="section-heading"><p class="eyebrow">SMART MATCHING</p><h2>DISCOVER CREATOR FIT.</h2></div><div class="card-grid">{% for creator, score in scored_creators[:6] %}<a class="creator-card" href="{{ url_for('creators.creator_detail', creator_id=creator.id) }}"><span class="score">{{ score }}%</span><div><h3>{{ creator.display_name }}</h3><p>{{ creator.niche }} • {{ creator.platforms }}</p></div></a>{% endfor %}</div></section>{% endif %}{% endblock %}

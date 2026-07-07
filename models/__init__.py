@@ -7,3 +7,5 @@ from .notification import Notification
 from .logs import UserLoginLog, CreatorViewLog, AuditLog
 from .review import DealReview
 from .security import AuthThrottle
+from .social import CreatorSocialAccount
+from .offer import CollaborationOffer

@@ -24,7 +24,12 @@ def calculate_match_score(campaign: Campaign, creator: CreatorProfile) -> int:
             score += 18
 
     campaign_platforms = _tokens(campaign.target_platforms)
-    creator_platforms = _tokens(creator.platforms)
+    creator_platforms = {account.platform for account in creator.user.social_accounts}
+    creator_platforms.update(
+        f"other:{(account.other_name or '').strip().lower()}"
+        for account in creator.user.social_accounts
+        if account.platform == "other" and account.other_name
+    )
     if campaign_platforms and creator_platforms:
         overlap = len(campaign_platforms & creator_platforms)
         score += min(24, overlap * 12)

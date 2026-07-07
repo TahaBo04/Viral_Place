@@ -8,9 +8,11 @@ Viral Place is a Flask/Jinja application with SQLAlchemy persistence, Flask-Logi
 | --- | --- |
 | `User` | Business, influencer, and admin accounts |
 | `CreatorProfile` | Creator audience, rates, portfolio, and social ownership review |
-| `Campaign` | Managed or marketplace advertising brief |
-| `Application` | Influencer application or direct business invitation |
-| `Order` | Customer funds, creator assignment, workflow, refund, and payout state |
+| `CreatorSocialAccount` | Canonical platform, safe profile URL, audience count, and primary badge |
+| `Campaign` | Public marketplace or private invite-only/managed advertising brief |
+| `Application` | Influencer application, direct invitation, or managed recommendation |
+| `CollaborationOffer` | Exact gross price, creator-rate snapshot, payout snapshot, and response state |
+| `Order` | Accepted-offer customer funds, delivery, refund, and payout state |
 | `Submission` | Versioned creator content sent to Viral Place review |
 | `OrderEvent` | Customer-visible and operations timeline |
 | `Notification` | In-app workflow alerts |
@@ -19,17 +21,18 @@ Viral Place is a Flask/Jinja application with SQLAlchemy persistence, Flask-Logi
 
 ## State flow
 
-1. A business creates a managed brief or public marketplace campaign.
-2. Viral Place assigns a creator, or the business selects an approved applicant.
-3. Stripe or operations confirms customer payment.
-4. The creator is notified and submits a secure delivery URL.
-5. Operations approves and delivers, requests revision, or refunds the customer.
-6. Approved work moves the influencer payout to `ready`; operations records payout completion.
-7. After completion or refund, each participant may send one private rating and comment to operations.
+1. A business creates a public, private invite-only, or private managed campaign.
+2. A business sends a whole-dollar offer at or above the creator's published minimum. Operations may first recommend creators for managed campaigns.
+3. The creator accepts or declines after seeing the gross price and payout snapshot.
+4. Acceptance creates an order; payment routes reject orders without an accepted offer.
+5. The creator submits a secure delivery URL after payment confirmation.
+6. Operations approves and delivers, requests revision, or refunds the customer.
+7. Approved work moves the influencer payout to `ready`; operations records payout completion.
+8. After completion or refund, each participant may send one private rating and comment to operations.
 
 Businesses do not require identity verification. Creators prove control of a social account by placing their generated Viral Place code in the linked profile until an admin approves it.
 
-Both account types must provide an international phone number before campaign selection. Numbers are private to operations and self-confirmed by the user. Admin authentication is isolated to its own portal and requires a password plus a separately configured operations access code. All browser forms use CSRF tokens, login failures are throttled in the shared database, sensitive HTML responses are not cached, and operations state changes are written to the audit log.
+Both account types must provide a regionally valid international phone number before selection. Numbers are normalized to E.164, remain private to operations, and are self-confirmed by the user. Private campaign authorization is centralized: only the owning business, administrators, and invited/recommended/offered creators can view a private brief; unauthorized direct requests return `404`. Admin authentication is isolated to its own portal and requires a password plus a separately configured operations access code. All browser forms use CSRF tokens, login failures are throttled in the shared database, sensitive HTML responses are not cached, and operations state changes are written to the audit log.
 
 ## Deployment
 

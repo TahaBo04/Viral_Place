@@ -38,6 +38,9 @@ def checkout(order_id):
     order = Order.query.get_or_404(order_id)
     if current_user.id != order.business_id:
         return "Access denied", 403
+    if not order.offer or order.offer.status != "accepted":
+        flash("Payment unlocks only after the creator accepts the offer.", "warning")
+        return redirect(url_for("orders.order_detail", order_id=order.id))
     if order.payment_status == "paid":
         return redirect(url_for("orders.order_detail", order_id=order.id))
     try:
@@ -55,7 +58,7 @@ def payment_success(order_id):
     if current_user.id != order.business_id:
         return "Access denied", 403
     session_id = request.args.get("session_id", "")
-    if session_id and sync_checkout(order, session_id):
+    if order.offer and order.offer.status == "accepted" and session_id and sync_checkout(order, session_id):
         flash("Payment confirmed. Viral Place has activated the order.", "success")
     else:
         flash("Payment is still being confirmed. Refresh this page shortly.", "info")
@@ -80,7 +83,6 @@ def submit_content(order_id):
     submission = Submission(order_id=order.id, influencer_id=current_user.id, version=version, video_url=video_url, notes=notes)
     db.session.add(submission)
     order.status = "under_review"
-    order.campaign.status = "under_review"
     add_order_event(order, "content_submitted", f"Version {version} submitted for Viral Place review.", current_user.id)
     notify_admins("Content ready for review", f"Order #{order.id} has a new creator submission.", f"/admin/orders/{order.id}")
     notify(order.business_id, "Content under agency review", f"Viral Place is reviewing the creator submission for {order.campaign.title}.", f"/orders/{order.id}")

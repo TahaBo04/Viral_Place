@@ -2,7 +2,7 @@
 {% block title %}Campaigns · Viral Place{% endblock %}
 {% block eyebrow %}OPEN CREATOR OPPORTUNITIES{% endblock %}
 {% block header_title %}BRIEFS BUILT TO PERFORM.{% endblock %}
-{% block header_subtitle %}Creators apply by niche and audience fit. Brands select, pay Viral Place, and activate production through a controlled workflow.{% endblock %}
+{% block header_subtitle %}Creators apply by niche and audience fit, then accept exact offer terms before any brand payment is available.{% endblock %}
 {% block content %}
 {% if current_user.is_authenticated and current_user.role == 'business' %}<div class="page-actions"><a class="button-primary" href="{{ url_for('campaigns.new_campaign') }}">POST A BRIEF</a></div>{% endif %}
 <section class="filter-band"><span>LIVE CAMPAIGNS</span><strong>{{ campaigns|length }}</strong></section>
@@ -13,7 +13,7 @@
       <p>{{ campaign.target_niche }} • {{ campaign.target_country }}</p>
       <h2>{{ campaign.title }}</h2>
       <p>{{ campaign.brief|truncate(170) }}</p>
-      <div class="card-footer"><span>{{ campaign.target_platforms }}</span><strong>${{ campaign.budget_min }}–${{ campaign.budget_max }}</strong></div>
+      <div class="card-footer"><span>{{ campaign_platform_labels(campaign.target_platforms)|join(', ') }}</span><strong>${{ campaign.budget_min }}–${{ campaign.budget_max }}</strong></div>
     </a>
   {% else %}<p class="empty-state">NO OPEN CAMPAIGNS YET.</p>{% endfor %}
 </section>

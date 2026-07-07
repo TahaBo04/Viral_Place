@@ -17,7 +17,7 @@ def create_app(config_class=Config):
     csrf.init_app(app)
 
     from models.user import User
-    from models import campaign, collaboration, creator, logs, notification, order, review, security, user  # noqa: F401
+    from models import campaign, collaboration, creator, logs, notification, offer, order, review, security, social, user  # noqa: F401
 
     @login_manager.user_loader
     def load_user(user_id: str):
@@ -34,6 +34,7 @@ def create_app(config_class=Config):
     from routes.influencer import influencer_bp
     from routes.notifications import notifications_bp
     from routes.orders import orders_bp
+    from routes.offers import offers_bp
     from routes.payments import payments_bp
     from routes.profile import profile_bp
 
@@ -41,6 +42,7 @@ def create_app(config_class=Config):
     app.register_blueprint(creators_bp)
     app.register_blueprint(campaigns_bp)
     app.register_blueprint(orders_bp)
+    app.register_blueprint(offers_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(payments_bp)
     csrf.exempt(payments_bp)
@@ -70,17 +72,27 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_navigation_state():
+        from services.contact_service import country_catalog, national_phone
+        from services.platform_service import PLATFORMS, campaign_platform_labels, platform_icon_url, platform_label
+        shared = {
+            "platform_catalog": PLATFORMS,
+            "platform_label": platform_label,
+            "platform_icon_url": platform_icon_url,
+            "campaign_platform_labels": campaign_platform_labels,
+            "phone_country_catalog": country_catalog(),
+            "national_phone": national_phone,
+        }
         if not current_user.is_authenticated:
-            return {"unread_notification_count": 0}
+            return {"unread_notification_count": 0, **shared}
         from services.notification_service import unread_count
-        return {"unread_notification_count": unread_count(current_user.id)}
+        return {"unread_notification_count": unread_count(current_user.id), **shared}
 
     @app.route("/")
     def home():
         from models.campaign import Campaign
         from models.creator import CreatorProfile
         creators = CreatorProfile.query.filter_by(verification_status="verified", availability="available").order_by(CreatorProfile.followers.desc()).limit(3).all()
-        campaigns = Campaign.query.filter(Campaign.status.in_(["open", "awaiting_selection"])).order_by(Campaign.created_at.desc()).limit(3).all()
+        campaigns = Campaign.query.filter_by(status="open", visibility="public").order_by(Campaign.created_at.desc()).limit(3).all()
         return render_template("home.html", creators=creators, campaigns=campaigns)
 
     @app.errorhandler(404)

@@ -6,6 +6,8 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models.creator import CreatorProfile
+from models.campaign import Campaign
+from models.collaboration import Application
 from models.order import Order, Submission
 from models.review import DealReview
 from models.user import User
@@ -13,6 +15,7 @@ from services.notification_service import notify
 from services.order_service import add_order_event, assign_creator, mark_order_paid
 from services.payment_service import refund_order
 from services.logging_service import log_audit_event
+from services.matching_service import calculate_match_score
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -33,13 +36,45 @@ def dashboard():
     orders = Order.query.order_by(Order.updated_at.desc()).all()
     pending_creators = CreatorProfile.query.filter_by(verification_status="pending").order_by(CreatorProfile.updated_at.asc()).all()
     recent_reviews = DealReview.query.order_by(DealReview.created_at.desc()).limit(20).all()
+    managed_campaigns = Campaign.query.filter_by(flow_type="managed", status="open").order_by(Campaign.created_at.asc()).all()
+    available_creators = CreatorProfile.query.filter_by(availability="available", verification_status="verified").order_by(CreatorProfile.followers.desc()).all()
     counts = {
         "awaiting_payment": sum(o.payment_status == "unpaid" for o in orders),
         "paid_unassigned": sum(o.status == "paid_unassigned" for o in orders),
         "under_review": sum(o.status == "under_review" for o in orders),
         "ready_payout": sum(o.payout_status == "ready" for o in orders),
     }
-    return render_template("admin_dashboard.html", orders=orders, counts=counts, pending_creators=pending_creators, recent_reviews=recent_reviews)
+    return render_template("admin_dashboard.html", orders=orders, counts=counts, pending_creators=pending_creators, recent_reviews=recent_reviews, managed_campaigns=managed_campaigns, available_creators=available_creators)
+
+
+@admin_bp.route("/campaigns/<int:campaign_id>/recommend", methods=["POST"])
+@login_required
+@admin_required
+def recommend_creator(campaign_id):
+    campaign = Campaign.query.get_or_404(campaign_id)
+    creator = CreatorProfile.query.get_or_404(request.form.get("creator_profile_id", type=int))
+    if campaign.flow_type != "managed" or not campaign.is_open or creator.verification_status != "verified":
+        flash("This creator cannot be recommended for that campaign.", "warning")
+        return redirect(url_for("admin.dashboard"))
+    application = Application.query.filter_by(campaign_id=campaign.id, creator_profile_id=creator.id).first()
+    if application:
+        flash("This creator is already connected to the managed campaign.", "info")
+        return redirect(url_for("admin.dashboard"))
+    application = Application(
+        campaign_id=campaign.id,
+        creator_profile_id=creator.id,
+        sender_id=current_user.id,
+        direction="admin_recommendation",
+        status="recommended",
+        message=request.form.get("message", "").strip(),
+        match_score=calculate_match_score(campaign, creator),
+    )
+    db.session.add(application)
+    notify(campaign.business_id, "Creator recommendation ready", f"Viral Place recommends {creator.display_name} for {campaign.title}. Set an offer amount to continue.", f"/campaigns/{campaign.id}")
+    db.session.commit()
+    log_audit_event("creator_recommended", "Operations recommended a creator for a managed campaign.", actor_user_id=current_user.id, target_user_id=creator.user_id, campaign_id=campaign.id, creator_profile_id=creator.id)
+    flash("Creator recommendation sent to the brand.", "success")
+    return redirect(url_for("admin.dashboard"))
 
 
 @admin_bp.route("/contacts")
@@ -122,6 +157,9 @@ def assign(order_id):
 @admin_required
 def mark_paid(order_id):
     order = Order.query.get_or_404(order_id)
+    if not order.offer or order.offer.status != "accepted":
+        flash("Payment cannot be confirmed before creator acceptance.", "warning")
+        return redirect(url_for("admin.order_detail", order_id=order.id))
     mark_order_paid(order, payment_intent_id=request.form.get("reference", "manual"), actor_id=current_user.id)
     log_audit_event(
         "manual_payment_confirmed",
@@ -148,7 +186,6 @@ def review_submission(order_id, submission_id):
     if action == "approve":
         submission.status = "approved"
         order.status = "delivered"
-        order.campaign.status = "delivered"
         order.payout_status = "ready"
         order.completed_at = datetime.utcnow()
         add_order_event(order, "approved", "Viral Place approved the content and released it to the customer.", current_user.id)
@@ -158,7 +195,6 @@ def review_submission(order_id, submission_id):
     elif action == "revision":
         submission.status = "revision_requested"
         order.status = "revision_requested"
-        order.campaign.status = "revision_requested"
         add_order_event(order, "revision_requested", notes or "Viral Place requested a more efficient revision.", current_user.id)
         notify(order.influencer_id, "Revision requested", notes or "Viral Place requested a revision before customer delivery.", f"/orders/{order.id}")
         notify(order.business_id, "Creator revision in progress", "Viral Place requested improvements before delivering your content.", f"/orders/{order.id}")
@@ -201,7 +237,6 @@ def mark_payout(order_id):
         return redirect(url_for("admin.order_detail", order_id=order.id))
     order.payout_status = "paid"
     order.status = "complete"
-    order.campaign.status = "complete"
     add_order_event(order, "payout_sent", "Influencer payout marked as sent by Viral Place.", current_user.id)
     if order.influencer_id:
         notify(order.influencer_id, "Payout sent", f"Your ${order.payout} payout for {order.campaign.title} was sent.", f"/orders/{order.id}")

@@ -30,11 +30,14 @@ def create_order(
     creator_profile: CreatorProfile | None = None,
     application: Application | None = None,
     customer_notes: str | None = None,
+    payout_cents: int | None = None,
+    offer=None,
 ) -> Order:
-    payout_cents = int(amount_cents * payout_percent() / 100)
+    payout_cents = payout_cents if payout_cents is not None else int(amount_cents * payout_percent() / 100)
     order = Order(
         campaign_id=campaign.id,
         application_id=application.id if application else None,
+        offer_id=offer.id if offer else None,
         business_id=campaign.business_id,
         influencer_id=creator_profile.user_id if creator_profile else None,
         creator_profile_id=creator_profile.id if creator_profile else None,
@@ -45,27 +48,6 @@ def create_order(
     db.session.add(order)
     db.session.flush()
     add_order_event(order, "order_created", "Order created and awaiting customer payment.", campaign.business_id)
-    return order
-
-
-def select_application(application: Application, amount_cents: int, actor_id: int) -> Order:
-    application.status = "selected_pending_payment"
-    for other in application.campaign.applications:
-        if other.id != application.id and other.status == "pending":
-            other.status = "not_selected"
-    order = create_order(
-        application.campaign,
-        amount_cents,
-        creator_profile=application.creator_profile,
-        application=application,
-    )
-    notify_admins(
-        "Creator selected, payment pending",
-        f"{application.creator_profile.display_name} was selected for {application.campaign.title}; activation waits for payment.",
-        f"/admin/orders/{order.id}",
-    )
-    add_order_event(order, "creator_selected", f"{application.creator_profile.display_name} selected by the customer.", actor_id)
-    db.session.commit()
     return order
 
 
@@ -92,6 +74,8 @@ def assign_creator(order: Order, creator_profile: CreatorProfile, actor_id: int)
 
 
 def mark_order_paid(order: Order, payment_intent_id: str | None = None, actor_id: int | None = None) -> None:
+    if not order.offer or order.offer.status != "accepted":
+        raise ValueError("Creator acceptance is required before payment.")
     if order.payment_status == "paid":
         return
     order.payment_status = "paid"
@@ -99,7 +83,6 @@ def mark_order_paid(order: Order, payment_intent_id: str | None = None, actor_id
     order.payout_status = "held"
     order.stripe_payment_intent_id = payment_intent_id or order.stripe_payment_intent_id
     order.status = "in_production" if order.influencer_id else "paid_unassigned"
-    order.campaign.status = "in_production" if order.influencer_id else "paid_unassigned"
     if order.application:
         order.application.status = "selected"
     add_order_event(order, "payment_confirmed", "Customer payment confirmed and held by Viral Place.", actor_id)
@@ -121,7 +104,6 @@ def mark_refunded(order: Order, reference: str | None = None, actor_id: int | No
     order.payout_status = "cancelled"
     order.refund_reference = reference
     order.refunded_at = datetime.utcnow()
-    order.campaign.status = "refunded"
     add_order_event(order, "refunded", "Customer payment refunded after agency review.", actor_id)
     notify(order.business_id, "Refund issued", f"Order #{order.id} was refunded after Viral Place review.", f"/orders/{order.id}")
     if order.influencer_id:

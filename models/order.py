@@ -9,6 +9,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey("campaigns.id"), nullable=False)
     application_id = db.Column(db.Integer, db.ForeignKey("applications.id"), unique=True)
+    offer_id = db.Column(db.Integer, db.ForeignKey("collaboration_offers.id"), unique=True)
     business_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     influencer_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     creator_profile_id = db.Column(db.Integer, db.ForeignKey("creator_profiles.id"))
@@ -34,6 +35,7 @@ class Order(db.Model):
 
     campaign = db.relationship("Campaign", back_populates="orders")
     application = db.relationship("Application", back_populates="order")
+    offer = db.relationship("CollaborationOffer", back_populates="order")
     business = db.relationship("User", foreign_keys=[business_id], backref="business_orders")
     influencer = db.relationship("User", foreign_keys=[influencer_id], backref="influencer_orders")
     creator_profile = db.relationship("CreatorProfile", backref="orders")

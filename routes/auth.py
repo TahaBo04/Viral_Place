@@ -12,6 +12,8 @@ from models.user import User
 from services.auth_security_service import clear_account_throttle, login_retry_after, record_login_failure
 from services.contact_service import normalize_phone
 from services.logging_service import log_login
+from services.platform_service import parse_social_accounts, replace_social_accounts
+from services.url_service import safe_https_url
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 ACCOUNT_TYPES = ("business", "influencer")
@@ -37,9 +39,13 @@ def register(account_type):
         password = request.form.get("password", "")
         company_name = request.form.get("company_name", "").strip()
         company_website = request.form.get("company_website", "").strip()
-        social_profile_url = request.form.get("social_profile_url", "").strip()
-        phone_number = normalize_phone(request.form.get("phone_number", ""))
+        phone_region = request.form.get("phone_region", "").upper()
+        phone_input = request.form.get("phone_national_number") or request.form.get("phone_number", "")
+        phone_number = normalize_phone(phone_input, phone_region or None)
         phone_confirmed = request.form.get("phone_active_confirmed") == "on"
+        picture_input = request.form.get("profile_picture", "").strip()
+        profile_picture = safe_https_url(picture_input) if picture_input else None
+        social_accounts = None
 
         if not all([first_name, last_name, email, password]):
             flash("Complete your name, email, and password.", "danger")
@@ -50,8 +56,14 @@ def register(account_type):
         if role == "business" and not company_name:
             flash("Enter your company or brand name.", "danger")
             return render_template("register.html", portal_role=role)
-        if role == "influencer" and not social_profile_url:
-            flash("Add the social profile you will use for creator ownership review.", "danger")
+        if role == "influencer":
+            try:
+                social_accounts = parse_social_accounts(request.form)
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return render_template("register.html", portal_role=role)
+        if picture_input and (not profile_picture or len(profile_picture) > 255):
+            flash("Profile pictures must use a safe public HTTPS URL.", "danger")
             return render_template("register.html", portal_role=role)
         if not phone_number or not phone_confirmed:
             flash("Enter an active phone number in international format and confirm it is reachable.", "danger")
@@ -68,11 +80,15 @@ def register(account_type):
             role=role,
             company_name=company_name if role == "business" else None,
             company_website=company_website if role == "business" else None,
-            social_profile_url=social_profile_url if role == "influencer" else None,
+            social_profile_url=next(item["profile_url"] for item in social_accounts if item["is_primary"]) if social_accounts else None,
+            profile_picture=profile_picture,
             phone_number=phone_number,
+            phone_region=phone_region or None,
             phone_confirmed_at=datetime.utcnow(),
         )
         db.session.add(user)
+        if social_accounts:
+            replace_social_accounts(user, social_accounts)
         try:
             db.session.commit()
         except IntegrityError:
