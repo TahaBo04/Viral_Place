@@ -1,59 +1,50 @@
-# Viral Place
+# Briefvora
 
-Viral Place is Viral Talent's managed creator marketplace. Companies publish public, private, or managed briefs and send independently priced offers to creators. A creator must accept the exact offer before an order can be created or paid; Viral Place then secures the funds, reviews delivery, and releases the creator payout after approval.
+An independent marketplace for brands and creators. Public, private, and managed briefs lead to individually priced offers. Creator acceptance creates an order; operations confirms the bank transfer before production starts, reviews content, and records payouts.
 
-## Product workflow
+Briefvora has no affiliation with Viral Talent. `briefvora.com` was reported available by Vercel's registrar on 11 September 2026. Availability is not a reservation or registration. The GitHub repository retains its existing name to preserve its URL and history.
 
-- Instant business signup with no company identity approval queue.
-- Creator social-account ownership review before marketplace visibility.
-- Public marketplace, private invite-only, and private managed campaigns.
-- Structured creator social accounts with safe HTTPS links and per-platform audience counts.
-- Accepted-offer checkout: creators see the gross price and estimated 70% payout before responding.
-- Multiple independently priced creator orders under one campaign.
-- Deterministic creator-to-campaign match scores.
-- Stripe Checkout with manual-payment support for operations, both blocked until offer acceptance.
-- In-app selection, payment, revision, approval, refund, and payout notifications.
-- Creator video-link submission, Viral Place quality control, and approved customer delivery.
-- Operations dashboard for creator verification, assignment, payment, content review, refunds, and payouts.
-- Private, self-confirmed international phone contacts for brands and influencers.
-- One private post-deal review per party after completion or refund.
-- CSRF-protected forms, throttled login attempts, hardened response headers, and a separate operations access code.
-
-## Local setup
+## Local development
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-VIRAL_PLACE_DEMO=1 python app.py
+python app.py
 ```
 
-Open `http://127.0.0.1:5000`.
+Open http://127.0.0.1:5000. Local development uses the existing `viral_place.db` filename for data compatibility. `.env.local` is not automatically loaded into the app. For persistent local sessions, set a random `SECRET_KEY` in `.env`; otherwise a temporary random key is generated on startup.
 
-Demo users use the password `viralplace123`:
+Optional demo data: `BRIEFVORA_DEMO=1 python app.py`. Existing local demo logins remain `brand@viralplace.local`, `lina@viralplace.local`, and `samir@viralplace.local`, with password `viralplace123`. Demo seeding is forbidden in production. Never point a production deployment at a database containing these demo accounts.
 
-- Business: `brand@viralplace.local`
-- Creator: `lina@viralplace.local`
-- Creator: `samir@viralplace.local`
+## Bank transfers
 
-## Production configuration
+Set `COMPANY_RIB` (24 digits), `COMPANY_BANK_NAME`, and `COMPANY_ACCOUNT_HOLDER` on the server after confirming the actual company details. Until all three are configured, buyers see that bank details are pending and are asked not to send funds. No sample RIB is shown on the real site.
 
-The Vercel deployment uses PostgreSQL through `DATABASE_URL` or `POSTGRES_URL`. Configure `SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a distinct `ADMIN_ACCESS_CODE`. Admin accounts can sign in only at `/auth/login/admin` with both the password and access code. Stripe checkout additionally requires `STRIPE_SECRET_KEY`; signed webhooks use `STRIPE_WEBHOOK_SECRET`.
+An accepted order shows its amount in USD and its `BRIEFVORA-<order id>` reference. Confirm any currency conversion with the customer outside the application. Only the buyer sees the RIB in the order. There are no card fields, uploads of bank statements, payment SDKs, or payment webhooks. Operations records received transfers and completed refunds with bank transaction references; the application does not initiate transfers or refunds.
 
-Phone numbers are selected from a worldwide calling-code catalog, validated by region, normalized to E.164, and shown only to Viral Place operations. The confirmation checkbox is a user attestation, not carrier-level SMS verification. Add an SMS provider before treating numbers as technically verified.
+## Hosting on Render
 
-Creator profile-picture and social-profile URLs must use safe public HTTPS hosts. Influencers must retain at least one supported social account with an audience count. Campaign offers are whole-dollar USD values from the creator's published minimum through `MAX_OFFER_USD` (default `$1,000,000`).
+[Deploy the configured free service](https://dashboard.render.com/blueprint/new?repo=https://github.com/TahaBo04/Viral_Place)
 
-Do not enable `VIRAL_PLACE_DEMO` in production.
+`render.yaml` creates a free Python web service with a generated session secret, HTTPS through Render, health checks, and GitHub deployments after checks pass. Connect an existing persistent PostgreSQL database via `DATABASE_URL`. Render's free PostgreSQL expires after 30 days, so it is deliberately not provisioned by this blueprint.
 
-## Main routes
+Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a different `ADMIN_ACCESS_CODE` in Render's environment settings. Both admin credentials require at least 16 characters. Admins sign in at `/auth/login/admin`. Do not put secrets in GitHub or share them in chat. The separate access code is an additional shared secret, not time-based MFA.
 
-- `/auth/register`, `/auth/register/business`, `/auth/register/influencer`
-- `/auth/login`, `/auth/login/business`, `/auth/login/influencer`
-- `/creators/`, `/campaigns/`, `/campaigns/new`
-- `/campaigns/<id>/close`, `/offers/<id>/accept`, `/offers/<id>/decline`
-- `/business/dashboard`, `/influencer/dashboard`
-- `/orders/<id>`, `/orders/<id>/review`, `/notifications/`
-- `/admin/`, `/admin/contacts`, `/auth/login/admin`
-- `/payments/stripe/webhook`
+Render automatically supplies `RENDER_EXTERNAL_HOSTNAME`. Add purchased custom domains through `TRUSTED_HOSTS` (comma-separated exact hostnames) and the Render dashboard. Do not enable proxy trust on a directly exposed server: the current configuration assumes Render/Vercel is the only public entry point.
+
+Free Render web services sleep after 15 minutes of inactivity and can take about a minute to wake. This is a starting option with usage limits, not an uptime guarantee. Set outbound/build spending limits to zero in Render's dashboard to prevent overage charges. No paid plan or domain purchase is performed by this repository. Vercel's free Hobby plan is restricted to non-commercial use.
+
+References: [Render free hosting](https://render.com/docs/free), [Render blueprints](https://render.com/docs/blueprint-spec), [Vercel Hobby](https://vercel.com/docs/plans/hobby).
+
+## Verification
+
+```bash
+python -m unittest discover -s tests -v
+bandit -r app.py config.py wsgi.py routes services models -x services/demo_seed.py
+pip-audit -r requirements.txt
+```
+
+CI runs the tests, code security scan, and dependency vulnerability audit. Tests cover role and private-campaign access, forged payment attempts, RIB visibility, admin confirmation, unsafe links, HTML escaping, request limits, duplicate inputs, login abuse, and production configuration. See [SECURITY.md](SECURITY.md) for scope and operational requirements.
+
+Visual assets: the original Briefvora mark; menu icon from [Lucide](https://lucide.dev/license); creator photograph from [Unsplash's image CDN](https://images.unsplash.com/photo-1492691527719-9d1e07e534b4). Legacy image files remain unreferenced for repository compatibility.

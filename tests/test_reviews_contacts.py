@@ -21,6 +21,7 @@ class ReviewAndContactTests(unittest.TestCase):
             SQLALCHEMY_TRACK_MODIFICATIONS = False
             SQLALCHEMY_ENGINE_OPTIONS = {}
             SESSION_COOKIE_SECURE = False
+            SESSION_PROTECTION = None
             WTF_CSRF_ENABLED = False
 
         self.app = create_app(TestConfig)

@@ -66,10 +66,10 @@ def assign_creator(order: Order, creator_profile: CreatorProfile, actor_id: int)
         notify(
             creator_profile.user_id,
             "New paid assignment",
-            f"Viral Place assigned you to {order.campaign.title}. The customer payment is secured; production can start.",
+            f"Briefvora assigned you to {order.campaign.title}. The customer payment is secured; production can start.",
             f"/orders/{order.id}",
         )
-    add_order_event(order, "creator_assigned", f"{creator_profile.display_name} assigned by Viral Place.", actor_id)
+    add_order_event(order, "creator_assigned", f"{creator_profile.display_name} assigned by Briefvora.", actor_id)
     db.session.commit()
 
 
@@ -78,6 +78,8 @@ def mark_order_paid(order: Order, payment_intent_id: str | None = None, actor_id
         raise ValueError("Creator acceptance is required before payment.")
     if order.payment_status == "paid":
         return
+    if order.payment_status != "unpaid" or order.status != "awaiting_payment":
+        raise ValueError("Only an unpaid active order can receive a transfer.")
     order.payment_status = "paid"
     order.paid_at = datetime.utcnow()
     order.payout_status = "held"
@@ -85,8 +87,8 @@ def mark_order_paid(order: Order, payment_intent_id: str | None = None, actor_id
     order.status = "in_production" if order.influencer_id else "paid_unassigned"
     if order.application:
         order.application.status = "selected"
-    add_order_event(order, "payment_confirmed", "Customer payment confirmed and held by Viral Place.", actor_id)
-    notify(order.business_id, "Payment confirmed", f"Payment for {order.campaign.title} is secured by Viral Place.", f"/orders/{order.id}")
+    add_order_event(order, "payment_confirmed", "Customer payment confirmed and held by Briefvora.", actor_id)
+    notify(order.business_id, "Payment confirmed", f"Payment for {order.campaign.title} is secured by Briefvora.", f"/orders/{order.id}")
     if order.influencer_id:
         notify(
             order.influencer_id,
@@ -105,7 +107,7 @@ def mark_refunded(order: Order, reference: str | None = None, actor_id: int | No
     order.refund_reference = reference
     order.refunded_at = datetime.utcnow()
     add_order_event(order, "refunded", "Customer payment refunded after agency review.", actor_id)
-    notify(order.business_id, "Refund issued", f"Order #{order.id} was refunded after Viral Place review.", f"/orders/{order.id}")
+    notify(order.business_id, "Refund issued", f"Order #{order.id} was refunded after Briefvora review.", f"/orders/{order.id}")
     if order.influencer_id:
         notify(order.influencer_id, "Order closed after review", "The content was not approved and the customer was refunded. Review the agency notes before future submissions.", f"/orders/{order.id}")
     db.session.commit()

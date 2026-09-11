@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set is_login = mode == 'login' %}
-{% block title %}{{ 'Log in' if is_login else 'Join' }} · Viral Place{% endblock %}
+{% block title %}{{ 'Log in' if is_login else 'Join' }} · Briefvora{% endblock %}
 {% block eyebrow %}TWO SIDES. ONE MANAGED WORKFLOW.{% endblock %}
 {% block header_title %}CHOOSE YOUR<br>WORKSPACE.{% endblock %}
 {% block header_subtitle %}Brands control campaigns and payments. Influencers manage applications, production, submissions, and payouts.{% endblock %}
@@ -19,5 +19,5 @@
     <strong>{{ 'OPEN CREATOR PORTAL' if is_login else 'JOIN AS AN INFLUENCER' }} →</strong>
   </a>
 </section>
-<p class="choice-switch">{{ 'NEW TO VIRAL PLACE?' if is_login else 'ALREADY HAVE AN ACCOUNT?' }} <a href="{{ url_for('auth.register' if is_login else 'auth.login') }}">{{ 'CHOOSE A SIGNUP PORTAL' if is_login else 'CHOOSE A LOGIN PORTAL' }}</a></p>
+<p class="choice-switch">{{ 'NEW TO BRIEFVORA?' if is_login else 'ALREADY HAVE AN ACCOUNT?' }} <a href="{{ url_for('auth.register' if is_login else 'auth.login') }}">{{ 'CHOOSE A SIGNUP PORTAL' if is_login else 'CHOOSE A LOGIN PORTAL' }}</a></p>
 {% endblock %}

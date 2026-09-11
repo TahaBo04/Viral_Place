@@ -10,7 +10,8 @@ from models.review import DealReview
 from services.logging_service import log_audit_event
 from services.notification_service import notify, notify_admins
 from services.order_service import add_order_event
-from services.payment_service import create_checkout, stripe_configured, sync_checkout
+from services.payment_service import bank_details
+from services.url_service import safe_https_url
 
 orders_bp = Blueprint("orders", __name__, url_prefix="/orders")
 REVIEWABLE_STATUSES = ("complete", "refunded")
@@ -29,7 +30,7 @@ def order_detail(order_id):
         return "Access denied", 403
     my_review = DealReview.query.filter_by(order_id=order.id, reviewer_id=current_user.id).first()
     can_review = current_user.id in (order.business_id, order.influencer_id) and order.status in REVIEWABLE_STATUSES and my_review is None
-    return render_template("order_detail.html", order=order, stripe_ready=stripe_configured(), my_review=my_review, can_review=can_review)
+    return render_template("order_detail.html", order=order, bank_details=bank_details(), my_review=my_review, can_review=can_review)
 
 
 @orders_bp.route("/<int:order_id>/checkout", methods=["POST"])
@@ -43,12 +44,7 @@ def checkout(order_id):
         return redirect(url_for("orders.order_detail", order_id=order.id))
     if order.payment_status == "paid":
         return redirect(url_for("orders.order_detail", order_id=order.id))
-    try:
-        checkout_url = create_checkout(order, request.url_root.rstrip("/"))
-    except Exception:
-        flash("Online checkout is temporarily unavailable. Viral Place can confirm a manual payment from the operations panel.", "warning")
-        return redirect(url_for("orders.order_detail", order_id=order.id))
-    return redirect(checkout_url)
+    return redirect(url_for("orders.order_detail", order_id=order.id, _anchor="bank-transfer"))
 
 
 @orders_bp.route("/<int:order_id>/payment/success")
@@ -57,11 +53,7 @@ def payment_success(order_id):
     order = Order.query.get_or_404(order_id)
     if current_user.id != order.business_id:
         return "Access denied", 403
-    session_id = request.args.get("session_id", "")
-    if order.offer and order.offer.status == "accepted" and session_id and sync_checkout(order, session_id):
-        flash("Payment confirmed. Viral Place has activated the order.", "success")
-    else:
-        flash("Payment is still being confirmed. Refresh this page shortly.", "info")
+    flash("Bank transfers are confirmed by operations after receipt.", "info")
     return redirect(url_for("orders.order_detail", order_id=order.id))
 
 
@@ -76,18 +68,19 @@ def submit_content(order_id):
         return redirect(url_for("orders.order_detail", order_id=order.id))
     video_url = request.form.get("video_url", "").strip()
     notes = request.form.get("notes", "").strip()
-    if not video_url.startswith(("https://", "http://")):
+    video_url = safe_https_url(video_url)
+    if not video_url:
         flash("Provide a valid secure video delivery link.", "danger")
         return redirect(url_for("orders.order_detail", order_id=order.id))
     version = len(order.submissions) + 1
     submission = Submission(order_id=order.id, influencer_id=current_user.id, version=version, video_url=video_url, notes=notes)
     db.session.add(submission)
     order.status = "under_review"
-    add_order_event(order, "content_submitted", f"Version {version} submitted for Viral Place review.", current_user.id)
+    add_order_event(order, "content_submitted", f"Version {version} submitted for Briefvora review.", current_user.id)
     notify_admins("Content ready for review", f"Order #{order.id} has a new creator submission.", f"/admin/orders/{order.id}")
-    notify(order.business_id, "Content under agency review", f"Viral Place is reviewing the creator submission for {order.campaign.title}.", f"/orders/{order.id}")
+    notify(order.business_id, "Content under agency review", f"Briefvora is reviewing the creator submission for {order.campaign.title}.", f"/orders/{order.id}")
     db.session.commit()
-    flash("Submission received. Viral Place will review it before customer delivery.", "success")
+    flash("Submission received. Briefvora will review it before customer delivery.", "success")
     return redirect(url_for("orders.order_detail", order_id=order.id))
 
 
@@ -131,5 +124,5 @@ def submit_review(order_id):
     )
     db.session.commit()
     log_audit_event("deal_review_submitted", "Private post-deal feedback submitted.", actor_user_id=current_user.id, order_id=order.id, metadata={"rating": rating, "category": category})
-    flash("Thank you. Your private feedback was sent to Viral Place operations.", "success")
+    flash("Thank you. Your private feedback was sent to Briefvora operations.", "success")
     return redirect(url_for("orders.order_detail", order_id=order.id))

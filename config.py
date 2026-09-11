@@ -1,4 +1,6 @@
 import os
+import secrets
+from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -17,22 +19,32 @@ def database_url() -> str:
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "viral-place-local-development-key")
+    PRODUCTION = bool(os.environ.get("VERCEL") or os.environ.get("RENDER") or os.environ.get("APP_ENV") == "production")
+    SECRET_KEY = os.environ.get("SECRET_KEY") or (None if PRODUCTION else secrets.token_hex(32))
     SQLALCHEMY_DATABASE_URI = database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
-    MAX_CONTENT_LENGTH = 4 * 1024 * 1024
+    MAX_CONTENT_LENGTH = 64 * 1024
+    MAX_FORM_MEMORY_SIZE = 64 * 1024
+    MAX_FORM_PARTS = 80
+    TRUSTED_HOSTS = list(filter(None, [os.environ.get("RENDER_EXTERNAL_HOSTNAME"), os.environ.get("VERCEL_URL"), os.environ.get("VERCEL_PROJECT_PRODUCTION_URL"), *os.environ.get("TRUSTED_HOSTS", "localhost,127.0.0.1,[::1]").split(",")]))
+    TRUST_PROXY_HEADERS = PRODUCTION
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_NAME = "__Host-viral_place_session" if os.environ.get("VERCEL") else "viral_place_session"
+    SESSION_COOKIE_NAME = "__Host-briefvora_session" if PRODUCTION else "briefvora_session"
     SESSION_COOKIE_PATH = "/"
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = bool(os.environ.get("VERCEL"))
+    SESSION_COOKIE_SECURE = PRODUCTION
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+    SESSION_REFRESH_EACH_REQUEST = False
     REMEMBER_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_NAME = "__Host-viral_place_remember" if os.environ.get("VERCEL") else "viral_place_remember"
+    REMEMBER_COOKIE_NAME = "__Host-briefvora_remember" if PRODUCTION else "briefvora_remember"
     REMEMBER_COOKIE_PATH = "/"
     REMEMBER_COOKIE_SAMESITE = "Lax"
-    REMEMBER_COOKIE_SECURE = bool(os.environ.get("VERCEL"))
+    REMEMBER_COOKIE_SECURE = PRODUCTION
     REMEMBER_COOKIE_DURATION = 60 * 60 * 24 * 14
-    PREFERRED_URL_SCHEME = "https" if os.environ.get("VERCEL") else "http"
+    PREFERRED_URL_SCHEME = "https" if PRODUCTION else "http"
+    COMPANY_RIB = os.environ.get("COMPANY_RIB", "")
+    COMPANY_BANK_NAME = os.environ.get("COMPANY_BANK_NAME", "")
+    COMPANY_ACCOUNT_HOLDER = os.environ.get("COMPANY_ACCOUNT_HOLDER", "")
     WTF_CSRF_TIME_LIMIT = 60 * 60 * 2
     MAX_OFFER_USD = int(os.environ.get("MAX_OFFER_USD", "1000000"))

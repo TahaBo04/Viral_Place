@@ -1,6 +1,6 @@
-# Copilot Instructions for Viral Place
+# Copilot Instructions for Briefvora
 
-Viral Place is Viral Talent's Flask marketplace for managed creator campaigns.
+Briefvora is an independent Flask marketplace for creator campaigns.
 
 ## Architecture
 
@@ -10,6 +10,8 @@ Viral Place is Viral Talent's Flask marketplace for managed creator campaigns.
 - Companies receive immediate access and must not be placed in an identity-review queue.
 - Creators require social-account ownership approval before discovery or campaign applications.
 - Creator activation happens only after customer payment is confirmed.
-- All content must pass Viral Place review before customer delivery or creator payout.
+- All content must pass Briefvora review before customer delivery or creator payout.
 - Use PostgreSQL in production and SQLite only for local development.
 - Never commit credentials, local databases, `.env` files, or `.vercel` state.
+- Payments use a read-only company RIB from server configuration. Only a freshly signed-in admin may confirm a received transfer. Do not introduce card processing or payment webhooks.
+- Keep rate limits in the shared database and validate form sizes, URL schemes, numeric bounds, and role ownership on the server.

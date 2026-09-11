@@ -2,7 +2,7 @@ from datetime import datetime
 from functools import wraps
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, login_fresh
 
 from extensions import db
 from models.creator import CreatorProfile
@@ -25,6 +25,8 @@ def admin_required(func):
     def wrapper(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != "admin":
             return "Access denied", 403
+        if request.method == "POST" and not login_fresh():
+            return "Please sign in again before changing operations records.", 403
         return func(*args, **kwargs)
     return wrapper
 
@@ -70,7 +72,7 @@ def recommend_creator(campaign_id):
         match_score=calculate_match_score(campaign, creator),
     )
     db.session.add(application)
-    notify(campaign.business_id, "Creator recommendation ready", f"Viral Place recommends {creator.display_name} for {campaign.title}. Set an offer amount to continue.", f"/campaigns/{campaign.id}")
+    notify(campaign.business_id, "Creator recommendation ready", f"Briefvora recommends {creator.display_name} for {campaign.title}. Set an offer amount to continue.", f"/campaigns/{campaign.id}")
     db.session.commit()
     log_audit_event("creator_recommended", "Operations recommended a creator for a managed campaign.", actor_user_id=current_user.id, target_user_id=creator.user_id, campaign_id=campaign.id, creator_profile_id=creator.id)
     flash("Creator recommendation sent to the brand.", "success")
@@ -95,7 +97,7 @@ def review_creator(creator_id):
     if action == "approve":
         creator.verification_status = "verified"
         creator.verified_at = datetime.utcnow()
-        creator.verification_notes = notes or "Social account ownership confirmed by Viral Place."
+        creator.verification_notes = notes or "Social account ownership confirmed by Briefvora."
         notify(creator.user_id, "Creator profile approved", "Your social account ownership is confirmed. You can now appear in discovery and apply to campaigns.", "/influencer/dashboard")
         flash("Creator approved and notified.", "success")
     elif action == "reject":
@@ -160,7 +162,11 @@ def mark_paid(order_id):
     if not order.offer or order.offer.status != "accepted":
         flash("Payment cannot be confirmed before creator acceptance.", "warning")
         return redirect(url_for("admin.order_detail", order_id=order.id))
-    mark_order_paid(order, payment_intent_id=request.form.get("reference", "manual"), actor_id=current_user.id)
+    reference = request.form.get("reference", "").strip()
+    if not reference or order.payment_status != "unpaid":
+        flash("Enter the bank transaction reference for an unpaid order.", "warning")
+        return redirect(url_for("admin.order_detail", order_id=order.id))
+    mark_order_paid(order, payment_intent_id=reference, actor_id=current_user.id)
     log_audit_event(
         "manual_payment_confirmed",
         "Operations manually confirmed customer payment.",
@@ -178,6 +184,9 @@ def mark_paid(order_id):
 def review_submission(order_id, submission_id):
     order = Order.query.get_or_404(order_id)
     submission = Submission.query.filter_by(id=submission_id, order_id=order.id).first_or_404()
+    if order.payment_status != "paid" or order.status != "under_review" or submission.status != "under_review":
+        flash("Only the current paid submission can be reviewed.", "warning")
+        return redirect(url_for("admin.order_detail", order_id=order.id))
     action = request.form.get("action")
     notes = request.form.get("review_notes", "").strip()
     submission.review_notes = notes
@@ -188,27 +197,27 @@ def review_submission(order_id, submission_id):
         order.status = "delivered"
         order.payout_status = "ready"
         order.completed_at = datetime.utcnow()
-        add_order_event(order, "approved", "Viral Place approved the content and released it to the customer.", current_user.id)
+        add_order_event(order, "approved", "Briefvora approved the content and released it to the customer.", current_user.id)
         notify(order.business_id, "Content approved and delivered", f"Your final content for {order.campaign.title} is ready in the order workspace.", f"/orders/{order.id}")
-        notify(order.influencer_id, "Content approved", f"Viral Place approved your submission. Your payout is now ready for processing.", f"/orders/{order.id}")
+        notify(order.influencer_id, "Content approved", f"Briefvora approved your submission. Your payout is now ready for processing.", f"/orders/{order.id}")
         flash("Content approved, delivered to the customer, and queued for payout.", "success")
     elif action == "revision":
         submission.status = "revision_requested"
         order.status = "revision_requested"
-        add_order_event(order, "revision_requested", notes or "Viral Place requested a more efficient revision.", current_user.id)
-        notify(order.influencer_id, "Revision requested", notes or "Viral Place requested a revision before customer delivery.", f"/orders/{order.id}")
-        notify(order.business_id, "Creator revision in progress", "Viral Place requested improvements before delivering your content.", f"/orders/{order.id}")
+        add_order_event(order, "revision_requested", notes or "Briefvora requested a more efficient revision.", current_user.id)
+        notify(order.influencer_id, "Revision requested", notes or "Briefvora requested a revision before customer delivery.", f"/orders/{order.id}")
+        notify(order.business_id, "Creator revision in progress", "Briefvora requested improvements before delivering your content.", f"/orders/{order.id}")
         flash("Revision request sent to the influencer.", "success")
     elif action == "refund":
         submission.status = "rejected"
         order.admin_notes = notes
         db.session.flush()
         try:
-            refund_order(order, actor_id=current_user.id)
+            refund_order(order, actor_id=current_user.id, reference=request.form.get("refund_reference", "").strip())
             flash("Order refunded and both parties notified.", "success")
-        except Exception as exc:
+        except ValueError as exc:
             db.session.rollback()
-            flash(f"Refund could not be completed: {exc}", "danger")
+            flash(str(exc), "danger")
             return redirect(url_for("admin.order_detail", order_id=order.id))
     else:
         flash("Choose approve, request revision, or refund.", "danger")
@@ -237,7 +246,7 @@ def mark_payout(order_id):
         return redirect(url_for("admin.order_detail", order_id=order.id))
     order.payout_status = "paid"
     order.status = "complete"
-    add_order_event(order, "payout_sent", "Influencer payout marked as sent by Viral Place.", current_user.id)
+    add_order_event(order, "payout_sent", "Influencer payout marked as sent by Briefvora.", current_user.id)
     if order.influencer_id:
         notify(order.influencer_id, "Payout sent", f"Your ${order.payout} payout for {order.campaign.title} was sent.", f"/orders/{order.id}")
     db.session.commit()

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
@@ -14,6 +14,9 @@ profile_bp = Blueprint("profile", __name__, url_prefix="/profile")
 @profile_bp.route("/<int:user_id>")
 def public_profile(user_id):
     user = User.query.get_or_404(user_id)
+    may_preview = current_user.is_authenticated and (current_user.id == user.id or current_user.role == "admin")
+    if not may_preview and (user.role == "admin" or (user.creator_profile and user.creator_profile.verification_status != "verified")):
+        abort(404)
     return render_template("profile_public.html", profile_user=user)
 
 
@@ -40,7 +43,11 @@ def edit_profile():
         current_user.profile_picture = profile_picture
         if current_user.role == "business":
             current_user.company_name = request.form.get("company_name", current_user.company_name or "").strip()
-            current_user.company_website = request.form.get("company_website", "").strip()
+            website = request.form.get("company_website", "").strip()
+            if website and not safe_https_url(website):
+                flash("Enter a public HTTPS company website.", "danger")
+                return render_template("profile_edit.html")
+            current_user.company_website = safe_https_url(website) if website else None
         db.session.commit()
         flash("Profile updated.", "success")
         return redirect(url_for("profile.public_profile", user_id=current_user.id))

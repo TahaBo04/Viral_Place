@@ -51,7 +51,7 @@ def platform_label(key: str, other_name: str | None = None) -> str:
 
 def platform_icon_url(key: str) -> str | None:
     slug = PLATFORM_ICON_SLUGS.get(key)
-    return f"https://cdn.simpleicons.org/{slug}/9CFF00" if slug else None
+    return f"https://cdn.simpleicons.org/{slug}/2455E8" if slug else None
 
 
 def campaign_platform_labels(value: str) -> list[str]:
@@ -82,12 +82,12 @@ def parse_social_accounts(form) -> list[dict]:
         url = form.get(f"social_url_{key}", "").strip()
         count = form.get(f"audience_count_{key}", type=int)
         other_name = form.get("other_platform_name", "").strip() if key == "other" else None
-        if count is None or count < 0:
+        if count is None or not 0 <= count <= 2_000_000_000:
             raise ValueError(f"Enter a valid audience count for {platform_label(key, other_name)}.")
         if key == "other" and not 2 <= len(other_name or "") <= 60:
             raise ValueError("Name the platform selected as Other.")
         safe_url = safe_https_url(url, PLATFORM_HOSTS.get(key))
-        if not safe_url:
+        if not safe_url or len(safe_url) > 500:
             raise ValueError(f"Enter a safe official HTTPS profile link for {platform_label(key, other_name)}.")
         accounts.append(
             {

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set is_brand = portal_role == 'business' %}
-{% block title %}Join as {{ 'a brand' if is_brand else 'an influencer' }} · Viral Place{% endblock %}
+{% block title %}Join as {{ 'a brand' if is_brand else 'an influencer' }} · Briefvora{% endblock %}
 {% block eyebrow %}{{ 'INSTANT BUSINESS ACCESS' if is_brand else 'CREATOR APPLICATION' }}{% endblock %}
 {% block header_title %}{{ 'LAUNCH WITH CREATORS.' if is_brand else 'TURN REACH INTO PAID WORK.' }}{% endblock %}
 {% block header_subtitle %}{{ 'Create briefs immediately, choose creators, and manage every accepted campaign from the Brand Hub.' if is_brand else 'Link at least one real social account, build your creator identity, and apply to matched campaigns.' }}{% endblock %}
@@ -11,7 +11,7 @@
     <label>FIRST NAME<input name="first_name" value="{{ request.form.get('first_name','') }}" autocomplete="given-name" required></label>
     <label>LAST NAME<input name="last_name" value="{{ request.form.get('last_name','') }}" autocomplete="family-name" required></label>
     <label>{{ 'WORK EMAIL' if is_brand else 'CREATOR EMAIL' }}<input type="email" name="email" value="{{ request.form.get('email','') }}" autocomplete="email" required></label>
-    <label>PASSWORD<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+    <label>PASSWORD<input type="password" name="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
     {% if is_brand %}<label>COMPANY / BRAND NAME<input name="company_name" value="{{ request.form.get('company_name','') }}" required></label><label>COMPANY WEBSITE<input type="url" name="company_website" value="{{ request.form.get('company_website','') }}" placeholder="https://"></label>{% endif %}
     <label class="span-2">PROFILE PICTURE URL <span class="optional">OPTIONAL</span><input type="url" name="profile_picture" value="{{ request.form.get('profile_picture','') }}" placeholder="https://images.example.com/profile.jpg"></label>
     <label>COUNTRY / CALLING CODE<select name="phone_region" required><option value="">Select country</option>{% for item in phone_country_catalog %}<option value="{{ item.region }}" {% if request.form.get('phone_region') == item.region %}selected{% endif %}>{{ item.name }} ({{ item.dial_code }})</option>{% endfor %}</select></label>
@@ -23,7 +23,7 @@
     {% for key, label in platform_catalog %}<div class="social-account-row" data-platform-row="{{ key }}"><div class="two-col">{% if key == 'other' %}<label>PLATFORM NAME<input name="other_platform_name" value="{{ request.form.get('other_platform_name','') }}" maxlength="60"></label>{% endif %}<label class="{{ '' if key == 'other' else 'span-2' }}">{{ label|upper }} PROFILE URL<input type="url" name="social_url_{{ key }}" value="{{ request.form.get('social_url_' + key,'') }}" placeholder="https://"></label><label>AUDIENCE COUNT<input type="number" min="0" name="audience_count_{{ key }}" value="{{ request.form.get('audience_count_' + key,'') }}"></label><label class="primary-choice"><input type="radio" name="primary_platform" value="{{ key }}" {% if request.form.get('primary_platform') == key %}checked{% endif %}><span>USE FOR OWNERSHIP REVIEW</span></label></div></div>{% endfor %}
   </fieldset>
   {% endif %}
-  <label class="check-row"><input type="checkbox" name="phone_active_confirmed" required><span>I CONFIRM THIS NUMBER IS ACTIVE AND VIRAL PLACE MAY CONTACT ME ABOUT MY DEALS.</span></label>
+  <label class="check-row"><input type="checkbox" name="phone_active_confirmed" required><span>I CONFIRM THIS NUMBER IS ACTIVE AND BRIEFVORA MAY CONTACT ME ABOUT MY DEALS.</span></label>
   <button class="button-primary" type="submit">{{ 'CREATE BRAND ACCOUNT' if is_brand else 'CREATE INFLUENCER ACCOUNT' }}</button>
   <p class="form-note">{{ 'Companies enter immediately with no identity approval delay.' if is_brand else 'Creators complete social account ownership review before appearing in discovery.' }}</p>
   <p class="form-note">WRONG ACCOUNT TYPE? <a href="{{ url_for('auth.register', account_type='influencer' if is_brand else 'business') }}">SWITCH TO {{ 'INFLUENCER' if is_brand else 'BRAND' }} SIGNUP</a></p>

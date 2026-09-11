@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
@@ -38,6 +38,8 @@ def new_campaign():
 
     if request.method == "POST":
         campaign_mode = request.form.get("campaign_mode", "public")
+        if campaign_mode not in ("public", "private", "managed"):
+            abort(400, "Choose a supported campaign mode.")
         flow_type = "managed" if campaign_mode == "managed" else "marketplace"
         visibility = "public" if campaign_mode == "public" else "private"
         selected_platforms = list(dict.fromkeys(request.form.getlist("target_platforms")))
@@ -69,7 +71,7 @@ def new_campaign():
         if not all(required) or campaign.budget_max <= 0:
             flash("Complete the campaign details and enter a valid budget.", "danger")
             return render_template("campaign_new.html")
-        if campaign.budget_min > campaign.budget_max:
+        if not 0 <= campaign.budget_min <= campaign.budget_max <= current_app.config.get("MAX_OFFER_USD", 1_000_000):
             flash("Minimum budget cannot exceed maximum budget.", "danger")
             return render_template("campaign_new.html")
 
@@ -122,7 +124,7 @@ def apply(campaign_id):
         flash("Add an active phone number before applying to a campaign.", "warning")
         return redirect(url_for("profile.edit_profile"))
     if current_user.creator_profile.verification_status != "verified":
-        flash("Viral Place must confirm control of your social account before you can apply.", "warning")
+        flash("Briefvora must confirm control of your social account before you can apply.", "warning")
         return redirect(url_for("creators.onboarding"))
 
     profile = current_user.creator_profile

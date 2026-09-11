@@ -1,30 +1,42 @@
 {% extends "base.html" %}{% from "_profile_media.html" import profile_media with context %}
-{% block title %}Viral Place · Managed creator campaigns{% endblock %}
+{% block title %}Briefvora · Managed creator campaigns{% endblock %}
 {% block body_class %}home-page{% endblock %}
 {% block hero_class %}home-hero{% endblock %}
-{% block eyebrow %}A VIRAL TALENT COMPANY{% endblock %}
-{% block header_title %}THE PLACE WHERE<br>BRANDS MEET CREATORS.{% endblock %}
-{% block header_subtitle %}Creators accept exact offer terms before brands pay. Viral Place then secures funds, reviews every video, and releases payouts after quality control.{% endblock %}
+{% block eyebrow %}INDEPENDENT CREATORS. SHARED AMBITION.{% endblock %}
+{% block header_title %}Briefvora<span class="brand-period">.</span>{% endblock %}
+{% block header_subtitle %}Find your next creative collaboration. Explore creators, send a brief, and make something worth seeing.{% endblock %}
 {% block hero_actions %}
   <div class="hero-actions">
-    <a class="button-primary" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register', account_type='business') }}">START A CAMPAIGN</a>
-    <a class="button-secondary" href="{{ url_for('campaigns.list_campaigns') }}">VIEW LIVE BRIEFS</a>
+    <a class="button-primary" href="{{ url_for('creators.list_creators') }}">Find a creator</a>
+    <a class="button-secondary" href="{{ url_for('campaigns.list_campaigns') }}">Explore briefs</a>
   </div>
 {% endblock %}
 
 {% block content %}
+<nav class="market-nav" aria-label="Marketplace"><span class="market-label">THE MARKETPLACE</span><a href="#creators">Discover creators</a><a href="#briefs">Open briefs</a><a class="text-link" href="{{ url_for('campaigns.new_campaign') }}">Post a brief &rarr;</a></nav>
+<section class="section-band" id="creators">
+  <div class="section-heading row-heading"><div><p class="eyebrow">THE PEOPLE BEHIND THE CONTENT</p><h2>Meet your next collaborator.</h2></div><a class="text-link" href="{{ url_for('creators.list_creators') }}">All creators &rarr;</a></div>
+  <div class="card-grid">
+    {% for creator in creators %}<a class="creator-card" href="{{ url_for('creators.creator_detail', creator_id=creator.id) }}">{{ profile_media(creator.user, creator) }}<div><p>{{ creator.niche }}</p><h3>{{ creator.display_name }}</h3><p>{{ creator.platforms }}</p><strong>{{ "{:,}".format(creator.followers) }} followers</strong></div></a>
+    {% else %}<div class="empty-state"><h3>A new creative circle is taking shape.</h3><p>Be part of the first wave of independent creators on Briefvora.</p><a class="text-link" href="{{ url_for('auth.register', account_type='influencer') }}">Create your profile &rarr;</a></div>{% endfor %}
+  </div>
+</section>
+<section class="section-band" id="briefs">
+  <div class="section-heading row-heading"><div><p class="eyebrow">OPEN OPPORTUNITIES</p><h2>A brief. A fresh perspective.</h2></div><a class="text-link" href="{{ url_for('campaigns.list_campaigns') }}">All briefs &rarr;</a></div>
+  <div class="card-grid">{% for campaign in campaigns %}<a class="campaign-card" href="{{ url_for('campaigns.campaign_detail', campaign_id=campaign.id) }}"><p>{{ campaign.target_niche }} &middot; {{ campaign.target_country }}</p><h3>{{ campaign.title }}</h3><div class="card-footer"><strong>${{ campaign.budget_min }}&ndash;${{ campaign.budget_max }}</strong><span class="tag">Open brief</span></div></a>{% else %}<div class="empty-state"><h3>The next collaboration starts with your brief.</h3><a class="text-link" href="{{ url_for('campaigns.new_campaign') }}">Post a campaign &rarr;</a></div>{% endfor %}</div>
+</section>
 <section class="pathways">
   <article class="pathway pathway-lime">
     <span class="section-index">01</span>
     <p class="eyebrow">FOR BRANDS</p>
-    <h2>DEMAND THE SERVICE.<br>WE HANDLE THE REST.</h2>
-    <p>Send Viral Place your brief, secure the budget, and let our operations team source, manage, review, and deliver the creator asset.</p>
+    <h2>Your idea.<br>The right creator.</h2>
+    <p>Send Briefvora your brief, secure the budget, and let our operations team source, manage, review, and deliver the creator asset.</p>
     <a class="text-link" href="{{ url_for('campaigns.new_campaign') if current_user.is_authenticated and current_user.role == 'business' else url_for('auth.register', account_type='business') }}">CREATE A MANAGED BRIEF →</a>
   </article>
   <article class="pathway">
     <span class="section-index">02</span>
     <p class="eyebrow">FOR CREATORS</p>
-    <h2>APPLY. GET SELECTED.<br>GET PAID.</h2>
+    <h2>Your craft.<br>New possibilities.</h2>
     <p>Apply to matched campaigns, review the exact offer and payout, then accept before the brand can secure payment.</p>
     <a class="text-link" href="{{ url_for('campaigns.list_campaigns') }}">BROWSE CAMPAIGNS →</a>
   </article>
@@ -32,43 +44,15 @@
 
 <section class="section-band process-band">
   <div class="section-heading">
-    <p class="eyebrow">THE VIRAL PLACE PROCESS</p>
-    <h2>CONTROLLED FROM PAYMENT TO PAYOUT.</h2>
+    <p class="eyebrow">THE BRIEFVORA PROCESS</p>
+    <h2>A clear path from brief to delivery.</h2>
   </div>
   <div class="process-grid">
     <article class="process-card"><span>01</span><h3>CREATOR SELECTION</h3><p>We identify and vet creators aligned with your audience, niche, and campaign goals.</p></article>
     <article class="process-card"><span>02</span><h3>CONTENT DIRECTION</h3><p>We shape a clear, conversion-ready brief before the creator starts production.</p></article>
-    <article class="process-card"><span>03</span><h3>PAYMENT SECURED</h3><p>Customer funds are confirmed before production starts.</p></article>
+    <article class="process-card"><span>03</span><h3>BANK TRANSFER</h3><p>The brand pays by bank transfer after creator acceptance. Production starts once operations confirms receipt.</p></article>
     <article class="process-card"><span>04</span><h3>AGENCY REVIEW</h3><p>We approve, request revision, or refund before delivery.</p></article>
   </div>
 </section>
 
-<section class="section-band">
-  <div class="section-heading row-heading">
-    <div><p class="eyebrow">LIVE TALENT</p><h2>CREATORS READY TO PERFORM.</h2></div>
-    <a class="button-secondary" href="{{ url_for('creators.list_creators') }}">VIEW ALL</a>
-  </div>
-  <div class="card-grid">
-    {% for creator in creators %}
-      <a class="creator-card" href="{{ url_for('creators.creator_detail', creator_id=creator.id) }}">
-        {{ profile_media(creator.user, creator) }}
-        <div><h3>{{ creator.display_name }}</h3><p>{{ creator.niche }} • {{ creator.platforms }}</p><strong>{{ "{:,}".format(creator.followers) }} FOLLOWERS</strong></div>
-      </a>
-    {% else %}<p class="empty-state">Creator profiles will appear here.</p>{% endfor %}
-  </div>
-</section>
-
-<section class="section-band">
-  <div class="section-heading row-heading">
-    <div><p class="eyebrow">OPEN OPPORTUNITIES</p><h2>BRIEFS WAITING FOR CREATORS.</h2></div>
-    <a class="button-secondary" href="{{ url_for('campaigns.list_campaigns') }}">VIEW ALL</a>
-  </div>
-  <div class="card-grid">
-    {% for campaign in campaigns %}
-      <a class="campaign-card" href="{{ url_for('campaigns.campaign_detail', campaign_id=campaign.id) }}">
-        <span class="status-dot"></span><p>{{ campaign.target_niche }} • {{ campaign.target_country }}</p><h3>{{ campaign.title }}</h3><strong>${{ campaign.budget_min }}–${{ campaign.budget_max }}</strong>
-      </a>
-    {% else %}<p class="empty-state">No public campaigns yet.</p>{% endfor %}
-  </div>
-</section>
 {% endblock %}

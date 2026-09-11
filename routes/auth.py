@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import secrets
+import re
 
 from flask import Blueprint, flash, make_response, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_user, logout_user
@@ -17,6 +18,7 @@ from services.url_service import safe_https_url
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 ACCOUNT_TYPES = ("business", "influencer")
+DUMMY_PASSWORD_HASH = generate_password_hash(secrets.token_urlsafe(32))
 
 
 @auth_bp.route("/register", defaults={"account_type": None}, methods=["GET", "POST"])
@@ -50,9 +52,17 @@ def register(account_type):
         if not all([first_name, last_name, email, password]):
             flash("Complete your name, email, and password.", "danger")
             return render_template("register.html", portal_role=role)
-        if len(password) < 8:
-            flash("Use at least 8 characters for your password.", "danger")
+        if not 12 <= len(password) <= 128:
+            flash("Use 12 to 128 characters for your password.", "danger")
             return render_template("register.html", portal_role=role)
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+            flash("Enter a valid email address.", "danger")
+            return render_template("register.html", portal_role=role)
+        if company_website:
+            company_website = safe_https_url(company_website)
+            if not company_website:
+                flash("Enter a public HTTPS company website.", "danger")
+                return render_template("register.html", portal_role=role)
         if role == "business" and not company_name:
             flash("Enter your company or brand name.", "danger")
             return render_template("register.html", portal_role=role)
@@ -98,7 +108,7 @@ def register(account_type):
 
         session.clear()
         login_user(user)
-        flash("Welcome to Viral Place. Your account is ready.", "success")
+        flash("Welcome to Briefvora. Your account is ready.", "success")
         if user.role == "business":
             return redirect(url_for("business.dashboard"))
         if user.role == "admin":
@@ -132,7 +142,8 @@ def login(account_type):
             return response
         user = User.query.filter_by(email=email).first()
 
-        if not user or not check_password_hash(user.password_hash, password):
+        password_valid = check_password_hash(user.password_hash if user else DUMMY_PASSWORD_HASH, password)
+        if not user or not password_valid:
             record_login_failure(email)
             if user:
                 log_login(user, success=False, failure_reason="wrong_password")
@@ -142,7 +153,7 @@ def login(account_type):
         if user.role == "admin":
             expected_code = os.environ.get("ADMIN_ACCESS_CODE", "")
             supplied_code = request.form.get("admin_access_code", "")
-            if portal_role != "admin" or not expected_code or not secrets.compare_digest(supplied_code, expected_code):
+            if portal_role != "admin" or not expected_code or not secrets.compare_digest(supplied_code.encode(), expected_code.encode()):
                 record_login_failure(email)
                 log_login(user, success=False, failure_reason="admin_access_denied")
                 flash("Email or password is incorrect.", "danger")
@@ -156,7 +167,8 @@ def login(account_type):
 
         clear_account_throttle(email)
         session.clear()
-        login_user(user, remember=request.form.get("remember") == "on")
+        session.permanent = True
+        login_user(user, remember=user.role != "admin" and request.form.get("remember") == "on")
         user.last_login_at = datetime.utcnow()
         db.session.commit()
         log_login(user, success=True)
@@ -174,4 +186,5 @@ def login(account_type):
 def logout():
     if current_user.is_authenticated:
         logout_user()
+    session.clear()
     return redirect(url_for("home"))

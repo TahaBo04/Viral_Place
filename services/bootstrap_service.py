@@ -13,16 +13,19 @@ def ensure_admin_account() -> None:
     password = os.environ.get("ADMIN_PASSWORD", "")
     if not email or not password:
         return
+    code = os.environ.get("ADMIN_ACCESS_CODE", "")
+    if len(password) < 16 or len(code) < 16 or password.startswith("replace-") or code.startswith("replace-") or password == code:
+        raise RuntimeError("Admin password and separate access code must each be at least 16 characters.")
     admin = User.query.filter_by(email=email).first()
     if admin:
         return
     admin = User(
-        first_name="Viral",
-        last_name="Place",
+        first_name="Briefvora",
+        last_name="Operations",
         email=email,
         password_hash=generate_password_hash(password),
         role="admin",
-        company_name="Viral Place",
+        company_name="Briefvora",
     )
     db.session.add(admin)
     db.session.commit()

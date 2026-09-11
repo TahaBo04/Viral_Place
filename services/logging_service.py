@@ -14,7 +14,7 @@ def log_login(user, success: bool, failure_reason: str | None = None):
         user_id=user.id,
         success=success,
         ip_address=request.remote_addr,
-        user_agent=request.headers.get("User-Agent"),
+        user_agent=request.headers.get("User-Agent", "")[:512],
         failure_reason=failure_reason,
         created_at=datetime.utcnow(),
     )
@@ -28,7 +28,7 @@ def log_creator_view(creator_profile_id: int, action: str, viewer_id: int | None
         creator_profile_id=creator_profile_id,
         action=action,
         ip_address=request.remote_addr,
-        user_agent=request.headers.get("User-Agent"),
+        user_agent=request.headers.get("User-Agent", "")[:512],
         created_at=datetime.utcnow(),
     )
     db.session.add(log)
@@ -55,7 +55,7 @@ def log_audit_event(
         description=description,
         metadata_json=json.dumps(metadata or {}),
         ip_address=request.remote_addr,
-        user_agent=request.headers.get("User-Agent"),
+        user_agent=request.headers.get("User-Agent", "")[:512],
         created_at=datetime.utcnow(),
     )
     db.session.add(log)

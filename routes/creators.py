@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import secrets
+import math
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
@@ -59,7 +60,7 @@ def onboarding():
                 user_id=current_user.id,
                 display_name=current_user.display_name,
                 platforms="",
-                verification_code=f"VP-{secrets.token_hex(3).upper()}",
+                verification_code=f"BV-{secrets.token_hex(4).upper()}",
             )
             db.session.add(profile)
         profile.display_name = request.form.get("display_name", current_user.display_name).strip()
@@ -88,14 +89,17 @@ def onboarding():
         if not all(required):
             flash("Complete the profile and add the social account used for ownership review.", "danger")
             return render_template("creator_onboarding.html", profile=profile)
-        if profile.starting_rate <= 0:
+        if not math.isfinite(profile.engagement_rate) or not 0 <= profile.engagement_rate <= 100:
+            flash("Enter an engagement rate between 0 and 100.", "danger")
+            return render_template("creator_onboarding.html", profile=profile)
+        if not 1 <= profile.starting_rate <= current_app.config.get("MAX_OFFER_USD", 1_000_000):
             flash("Enter a starting rate of at least $1 USD.", "danger")
             return render_template("creator_onboarding.html", profile=profile)
         db.session.commit()
         if profile.verification_status == "verified":
             flash("Creator profile updated.", "success")
         else:
-            flash(f"Profile sent for review. Place {profile.verification_code} in your social bio until Viral Place approves it.", "success")
+            flash(f"Profile sent for review. Place {profile.verification_code} in your social bio until Briefvora approves it.", "success")
         return redirect(url_for("influencer.dashboard"))
     return render_template("creator_onboarding.html", profile=profile)
 

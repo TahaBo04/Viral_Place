@@ -22,6 +22,7 @@ class MarketplaceWorkflowTests(unittest.TestCase):
             SQLALCHEMY_TRACK_MODIFICATIONS = False
             SQLALCHEMY_ENGINE_OPTIONS = {}
             SESSION_COOKIE_SECURE = False
+            SESSION_PROTECTION = None
             WTF_CSRF_ENABLED = False
             MAX_OFFER_USD = 1_000_000
 
@@ -114,6 +115,75 @@ class MarketplaceWorkflowTests(unittest.TestCase):
             f"/creators/{creator_profile_id}/invite",
             data={"campaign_id": self.private_id, "offer_amount": str(amount), "message": "Private launch offer."},
         )
+
+    def accepted_order(self):
+        creator_id, profile_id = self.creator_ids[0]
+        self.login_as(self.brand_id)
+        self.send_offer(profile_id, amount=800)
+        with self.app.app_context():
+            offer_id = CollaborationOffer.query.one().id
+        self.login_as(creator_id)
+        self.client.post(f"/offers/{offer_id}/accept")
+        with self.app.app_context():
+            return Order.query.one().id
+
+    def test_bank_details_wait_for_configuration_and_only_reach_buyer(self):
+        order_id = self.accepted_order()
+        self.login_as(self.brand_id)
+        response = self.client.get(f"/orders/{order_id}")
+        self.assertIn(b"Awaiting company bank details", response.data)
+        self.app.config.update(COMPANY_RIB="123456789012345678901234", COMPANY_BANK_NAME="Bank Example", COMPANY_ACCOUNT_HOLDER="Example Company")
+        response = self.client.get(f"/orders/{order_id}")
+        self.assertIn(b"123456789012345678901234", response.data)
+        self.assertNotIn(b"STRIPE", response.data)
+        self.login_as(self.creator_ids[0][0])
+        self.assertNotIn(b"123456789012345678901234", self.client.get(f"/orders/{order_id}").data)
+        self.login_as(self.creator_ids[1][0])
+        self.assertEqual(self.client.get(f"/orders/{order_id}").status_code, 403)
+
+    def test_buyer_cannot_fake_payment_using_url_or_post(self):
+        order_id = self.accepted_order()
+        self.login_as(self.brand_id)
+        self.client.get(f"/orders/{order_id}/payment/success?session_id=fake&payment_status=paid")
+        self.client.post(f"/orders/{order_id}/checkout", data={"amount": "1", "payment_status": "paid", "COMPANY_RIB": "ATTACKER"})
+        self.assertEqual(self.client.post(f"/admin/orders/{order_id}/mark-paid", data={"reference": "FAKE"}).status_code, 403)
+        with self.app.app_context():
+            order = db.session.get(Order, order_id)
+            self.assertEqual(order.payment_status, "unpaid")
+            self.assertEqual(order.amount_cents, 80000)
+
+    def test_admin_confirmation_is_fresh_referenced_and_idempotent(self):
+        order_id = self.accepted_order()
+        self.login_as(self.admin_id)
+        with self.client.session_transaction() as session:
+            session["_fresh"] = False
+        self.assertEqual(self.client.post(f"/admin/orders/{order_id}/mark-paid", data={"reference": "BANK-123"}).status_code, 403)
+        self.login_as(self.admin_id)
+        self.client.post(f"/admin/orders/{order_id}/mark-paid", data={})
+        with self.app.app_context():
+            self.assertEqual(db.session.get(Order, order_id).payment_status, "unpaid")
+        for _ in range(2):
+            self.client.post(f"/admin/orders/{order_id}/mark-paid", data={"reference": "BANK-123"})
+        with self.app.app_context():
+            order = db.session.get(Order, order_id)
+            self.assertEqual(order.payment_status, "paid")
+            self.assertEqual(order.status, "in_production")
+            self.assertEqual(sum(event.event_type == "payment_confirmed" for event in order.events), 1)
+
+    def test_delivery_links_reject_active_content_and_private_hosts(self):
+        from models.order import Submission
+        order_id = self.accepted_order()
+        self.login_as(self.admin_id)
+        self.client.post(f"/admin/orders/{order_id}/mark-paid", data={"reference": "BANK-123"})
+        self.login_as(self.creator_ids[0][0])
+        for url in ("javascript:alert(1)", "https://localhost/secret", "http://example.com/video", "https://127.0.0.1/admin"):
+            self.client.post(f"/orders/{order_id}/submit", data={"video_url": url})
+        with self.app.app_context():
+            self.assertEqual(Submission.query.count(), 0)
+        self.client.post(f"/orders/{order_id}/submit", data={"video_url": "https://example.com/video", "notes": "<script>alert(1)</script>"})
+        response = self.client.get(f"/orders/{order_id}")
+        self.assertIn(b"&lt;script&gt;", response.data)
+        self.assertNotIn(b"<script>alert(1)</script>", response.data)
 
     def test_private_campaign_is_hidden_until_invited(self):
         self.assertEqual(self.client.get(f"/campaigns/{self.private_id}").status_code, 404)

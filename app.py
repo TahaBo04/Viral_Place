@@ -3,6 +3,8 @@ import os
 from flask import Flask, render_template
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
+from werkzeug.exceptions import SecurityError
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from extensions import csrf, db, login_manager
@@ -11,10 +13,21 @@ from extensions import csrf, db, login_manager
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    if app.config.get("TRUST_PROXY_HEADERS"):
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=0, x_proto=1, x_host=0)
+    if app.config.get("PRODUCTION"):
+        if not app.config.get("SECRET_KEY") or len(app.config["SECRET_KEY"]) < 32 or app.config["SECRET_KEY"].startswith("replace-") or app.config["SECRET_KEY"] == "viral-place-local-development-key":
+            raise RuntimeError("A strong SECRET_KEY is required in production.")
+        if not app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql://"):
+            raise RuntimeError("Production requires persistent PostgreSQL storage.")
+        if os.environ.get("VIRAL_PLACE_DEMO") == "1" or os.environ.get("BRIEFVORA_DEMO") == "1":
+            raise RuntimeError("Demo accounts must never be enabled in production.")
+    from services.request_security_service import protect_request
 
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    app.before_request(protect_request)
 
     from models.user import User
     from models import campaign, collaboration, creator, logs, notification, offer, order, review, security, social, user  # noqa: F401
@@ -35,7 +48,6 @@ def create_app(config_class=Config):
     from routes.notifications import notifications_bp
     from routes.orders import orders_bp
     from routes.offers import offers_bp
-    from routes.payments import payments_bp
     from routes.profile import profile_bp
 
     app.register_blueprint(auth_bp)
@@ -44,8 +56,6 @@ def create_app(config_class=Config):
     app.register_blueprint(orders_bp)
     app.register_blueprint(offers_bp)
     app.register_blueprint(notifications_bp)
-    app.register_blueprint(payments_bp)
-    csrf.exempt(payments_bp)
     app.register_blueprint(business_bp)
     app.register_blueprint(influencer_bp)
     app.register_blueprint(admin_bp)
@@ -66,6 +76,8 @@ def create_app(config_class=Config):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        if app.config.get("PRODUCTION"):
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         if response.content_type and response.content_type.startswith("text/html"):
             response.headers["Cache-Control"] = "no-store, max-age=0"
         return response
@@ -95,6 +107,28 @@ def create_app(config_class=Config):
         campaigns = Campaign.query.filter_by(status="open", visibility="public").order_by(Campaign.created_at.desc()).limit(3).all()
         return render_template("home.html", creators=creators, campaigns=campaigns)
 
+    @app.route("/healthz")
+    def health():
+        from sqlalchemy import text
+        try:
+            db.session.execute(text("SELECT 1"))
+        except Exception:
+            db.session.rollback()
+            return {"status": "unavailable"}, 503
+        return {"status": "ok"}
+
+    @app.errorhandler(400)
+    @app.errorhandler(413)
+    @app.errorhandler(415)
+    @app.errorhandler(429)
+    def rejected_request(error):
+        if isinstance(error, SecurityError):
+            return "Invalid request host.", 400, {"Content-Type": "text/plain; charset=utf-8"}
+        response = app.make_response((render_template("error.html", code=error.code, message=error.description), error.code))
+        if error.code == 429:
+            response.headers["Retry-After"] = str(getattr(error, "retry_after", None) or 900)
+        return response
+
     @app.errorhandler(404)
     def not_found(_error):
         return render_template("error.html", code=404, message="That page does not exist."), 404
@@ -102,7 +136,7 @@ def create_app(config_class=Config):
     @app.errorhandler(500)
     def server_error(_error):
         db.session.rollback()
-        return render_template("error.html", code=500, message="Viral Place hit an unexpected error. Please try again."), 500
+        return render_template("error.html", code=500, message="Briefvora hit an unexpected error. Please try again."), 500
 
     @app.errorhandler(CSRFError)
     def csrf_error(_error):
@@ -118,7 +152,7 @@ def initialize_database(app):
         apply_compatible_schema_updates()
         from services.bootstrap_service import ensure_admin_account
         ensure_admin_account()
-        if os.environ.get("VIRAL_PLACE_DEMO") == "1":
+        if os.environ.get("BRIEFVORA_DEMO", os.environ.get("VIRAL_PLACE_DEMO")) == "1":
             from services.demo_seed import seed_demo_data
             seed_demo_data()
 

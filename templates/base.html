@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Viral Place is Viral Talent's managed creator marketplace for campaign sourcing, payment, review, delivery, and payouts.">
-  <title>{% block title %}Viral Place{% endblock %}</title>
-  <link rel="icon" href="{{ url_for('static', filename='uploads/viral-talent-logo.png') }}">
+  <meta name="description" content="Briefvora is an independent marketplace connecting brands and creators, from the first brief to approved content and bank-transfer payment.">
+  <title>{% block title %}Briefvora{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='brand.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <nav class="site-nav" aria-label="Primary navigation">
-    <a class="wordmark" href="{{ url_for('home') }}" aria-label="Viral Place home">
-      <span class="bolt">ϟ</span>
-      <span>VIRAL PLACE</span>
-      <img src="{{ url_for('static', filename='uploads/viral-talent-logo.png') }}" alt="A Viral Talent company">
+    <a class="wordmark" href="{{ url_for('home') }}" aria-label="Briefvora home">
+      <img class="brand-symbol" src="{{ url_for('static', filename='brand.svg') }}" alt="" width="32" height="32">
+      <span>briefvora<span class="brand-period">.</span></span>
     </a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mainNav" data-menu-toggle>MENU</button>
+    <button class="menu-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-expanded="false" aria-controls="mainNav" data-menu-toggle><img src="{{ url_for('static', filename='menu.svg') }}" alt="" width="24" height="24"></button>
     <div class="nav-links" id="mainNav">
       <a href="{{ url_for('creators.list_creators') }}">CREATORS</a>
       <a href="{{ url_for('campaigns.list_campaigns') }}">CAMPAIGNS</a>
@@ -29,26 +28,19 @@
         <form method="post" action="{{ url_for('auth.logout') }}" class="nav-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="nav-button">LOG OUT</button></form>
       {% else %}
         <a href="{{ url_for('auth.login') }}">LOG IN</a>
-        <a class="nav-cta" href="{{ url_for('auth.register') }}">JOIN THE PLACE</a>
+        <a class="nav-cta" href="{{ url_for('auth.register') }}">GET STARTED</a>
       {% endif %}
     </div>
   </nav>
 
   <header class="page-hero {% block hero_class %}compact-hero{% endblock %}">
     <div class="hero-inner">
-      <p class="eyebrow">{% block eyebrow %}PERFORMANCE-DRIVEN. CREATOR-LED.{% endblock %}</p>
-      <h1>{% block header_title %}CREATOR CAMPAIGNS.<br>MANAGED END TO END.{% endblock %}</h1>
-      <p class="hero-copy">{% block header_subtitle %}Viral Place secures payment, manages production, reviews every asset, and delivers approved creator content.{% endblock %}</p>
+      <p class="eyebrow">{% block eyebrow %}THE INDEPENDENT CREATOR MARKETPLACE{% endblock %}</p>
+      <h1>{% block header_title %}Creator campaigns, from brief to delivery.{% endblock %}</h1>
+      <p class="hero-copy">{% block header_subtitle %}Briefvora secures payment, manages production, reviews every asset, and delivers approved creator content.{% endblock %}</p>
       {% block hero_actions %}{% endblock %}
     </div>
   </header>
-
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      <span>VIRAL PLACE • SECURE PAYMENT • CREATOR SELECTION • AGENCY REVIEW • APPROVED DELIVERY • CREATOR PAYOUT •</span>
-      <span>VIRAL PLACE • SECURE PAYMENT • CREATOR SELECTION • AGENCY REVIEW • APPROVED DELIVERY • CREATOR PAYOUT •</span>
-    </div>
-  </div>
 
   <main class="page-shell">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -65,15 +57,14 @@
 
   <footer class="site-footer">
     <div>
-      <span class="footer-mark">VIRAL PLACE</span>
-      <p>A VIRAL TALENT COMPANY</p>
+      <span class="footer-mark">briefvora<span class="brand-period">.</span></span>
+      <p>Independent minds. Shared ambitions.</p>
     </div>
     <div class="footer-links">
-      <a href="https://viraltalent.co/" target="_blank" rel="noopener noreferrer">VIRAL TALENT</a>
       <a href="{{ url_for('campaigns.list_campaigns') }}">CAMPAIGNS</a>
       <a href="{{ url_for('creators.list_creators') }}">CREATORS</a>
     </div>
-    <p>© 2026 VIRAL TALENT. ALL RIGHTS RESERVED.</p>
+    <p>© 2026 Briefvora. All rights reserved.</p>
   </footer>
 
   <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>

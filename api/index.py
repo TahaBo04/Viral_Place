@@ -11,4 +11,4 @@ app = create_app()
 try:
     initialize_database(app)
 except Exception:
-    logging.exception("Viral Place database initialization failed")
+    logging.exception("Briefvora database initialization failed")
