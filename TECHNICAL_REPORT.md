@@ -22,7 +22,7 @@ Briefvora is an independent Flask/Jinja application with SQLAlchemy persistence,
 ## State flow
 
 1. A business creates a public, private invite-only, or private managed campaign.
-2. A business sends a whole-dollar offer at or above the creator's published minimum. Operations may first recommend creators for managed campaigns.
+2. A business sends a whole-unit offer at or above the creator's published minimum, in the same stored currency as the campaign and creator rate. New live prices use MAD; historical USD records retain their values and currency. Operations may first recommend creators for managed campaigns.
 3. The creator accepts or declines after seeing the gross price and payout snapshot.
 4. Acceptance creates an order; payment routes reject orders without an accepted offer.
 5. The creator submits a secure delivery URL after payment confirmation.

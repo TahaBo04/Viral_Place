@@ -13,6 +13,8 @@ def _tokens(value: str) -> set[str]:
 
 
 def calculate_match_score(campaign: Campaign, creator: CreatorProfile) -> int:
+    if campaign.currency != creator.currency:
+        return 0
     score = 0
 
     campaign_niche = (campaign.target_niche or "").strip().lower()
@@ -56,5 +58,5 @@ def calculate_match_score(campaign: Campaign, creator: CreatorProfile) -> int:
 
 
 def score_creators_for_campaign(campaign: Campaign, creators: list[CreatorProfile]) -> list[tuple[CreatorProfile, int]]:
-    scored = [(creator, calculate_match_score(campaign, creator)) for creator in creators]
+    scored = [(creator, calculate_match_score(campaign, creator)) for creator in creators if creator.currency == campaign.currency]
     return sorted(scored, key=lambda item: item[1], reverse=True)

@@ -61,6 +61,7 @@ def onboarding():
                 display_name=current_user.display_name,
                 platforms="",
                 verification_code=f"BV-{secrets.token_hex(4).upper()}",
+                currency=current_app.config.get("MARKETPLACE_CURRENCY", "usd"),
             )
             db.session.add(profile)
         profile.display_name = request.form.get("display_name", current_user.display_name).strip()
@@ -92,8 +93,8 @@ def onboarding():
         if not math.isfinite(profile.engagement_rate) or not 0 <= profile.engagement_rate <= 100:
             flash("Enter an engagement rate between 0 and 100.", "danger")
             return render_template("creator_onboarding.html", profile=profile)
-        if not 1 <= profile.starting_rate <= current_app.config.get("MAX_OFFER_USD", 1_000_000):
-            flash("Enter a starting rate of at least $1 USD.", "danger")
+        if not 1 <= profile.starting_rate <= current_app.config.get("MAX_OFFER_AMOUNT", 1_000_000):
+            flash(f"Enter a starting rate between 1 and {current_app.config.get('MAX_OFFER_AMOUNT', 1_000_000):,} {profile.currency.upper()}.", "danger")
             return render_template("creator_onboarding.html", profile=profile)
         db.session.commit()
         if profile.verification_status == "verified":
@@ -115,7 +116,7 @@ def creator_detail(creator_id):
     campaigns = []
     scores = {}
     if current_user.is_authenticated and current_user.role == "business":
-        campaigns = Campaign.query.filter_by(business_id=current_user.id, status="open").all()
+        campaigns = Campaign.query.filter_by(business_id=current_user.id, status="open", currency=creator.currency).all()
         scores = {campaign.id: calculate_match_score(campaign, creator) for campaign in campaigns}
     return render_template("creator_detail.html", creator=creator, campaigns=campaigns, scores=scores)
 

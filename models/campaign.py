@@ -17,6 +17,7 @@ class Campaign(db.Model):
     target_country = db.Column(db.String(80), nullable=False)
     budget_min = db.Column(db.Integer, default=0, nullable=False)
     budget_max = db.Column(db.Integer, default=0, nullable=False)
+    currency = db.Column(db.String(3), default="usd", nullable=False)
     goal = db.Column(db.String(120), nullable=False)
     brief = db.Column(db.Text, nullable=False)
     deliverables = db.Column(db.Text, nullable=False)

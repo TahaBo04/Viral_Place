@@ -62,6 +62,7 @@ def new_campaign():
             target_country=request.form.get("target_country", "").strip(),
             budget_min=request.form.get("budget_min", type=int) or 0,
             budget_max=request.form.get("budget_max", type=int) or 0,
+            currency=current_app.config.get("MARKETPLACE_CURRENCY", "usd"),
             goal=request.form.get("goal", "").strip(),
             brief=request.form.get("brief", "").strip(),
             deliverables=request.form.get("deliverables", "").strip(),
@@ -71,7 +72,7 @@ def new_campaign():
         if not all(required) or campaign.budget_max <= 0:
             flash("Complete the campaign details and enter a valid budget.", "danger")
             return render_template("campaign_new.html")
-        if not 0 <= campaign.budget_min <= campaign.budget_max <= current_app.config.get("MAX_OFFER_USD", 1_000_000):
+        if not 0 <= campaign.budget_min <= campaign.budget_max <= current_app.config.get("MAX_OFFER_AMOUNT", 1_000_000):
             flash("Minimum budget cannot exceed maximum budget.", "danger")
             return render_template("campaign_new.html")
 

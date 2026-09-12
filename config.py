@@ -46,5 +46,7 @@ class Config:
     COMPANY_RIB = os.environ.get("COMPANY_RIB", "")
     COMPANY_BANK_NAME = os.environ.get("COMPANY_BANK_NAME", "")
     COMPANY_ACCOUNT_HOLDER = os.environ.get("COMPANY_ACCOUNT_HOLDER", "")
+    COMPANY_BANK_CURRENCY = os.environ.get("COMPANY_BANK_CURRENCY", "mad").strip().lower()
+    MARKETPLACE_CURRENCY = os.environ.get("MARKETPLACE_CURRENCY", "mad").strip().lower()
     WTF_CSRF_TIME_LIMIT = 60 * 60 * 2
-    MAX_OFFER_USD = int(os.environ.get("MAX_OFFER_USD", "1000000"))
+    MAX_OFFER_AMOUNT = int(os.environ.get("MAX_OFFER_AMOUNT", os.environ.get("MAX_OFFER_USD", "1000000")))

@@ -13,6 +13,9 @@ from extensions import csrf, db, login_manager
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    for key in ("MARKETPLACE_CURRENCY", "COMPANY_BANK_CURRENCY"):
+        if app.config.get(key, "usd") not in ("mad", "usd"):
+            raise RuntimeError(f"{key} must be mad or usd.")
     if app.config.get("TRUST_PROXY_HEADERS"):
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=0, x_proto=1, x_host=0)
     if app.config.get("PRODUCTION"):

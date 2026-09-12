@@ -13,7 +13,7 @@ from models.review import DealReview
 from models.user import User
 from services.notification_service import notify
 from services.order_service import add_order_event, assign_creator, mark_order_paid
-from services.payment_service import refund_order
+from services.payment_service import refund_order, transfer_available
 from services.logging_service import log_audit_event
 from services.matching_service import calculate_match_score
 
@@ -55,7 +55,7 @@ def dashboard():
 def recommend_creator(campaign_id):
     campaign = Campaign.query.get_or_404(campaign_id)
     creator = CreatorProfile.query.get_or_404(request.form.get("creator_profile_id", type=int))
-    if campaign.flow_type != "managed" or not campaign.is_open or creator.verification_status != "verified":
+    if campaign.flow_type != "managed" or not campaign.is_open or creator.verification_status != "verified" or creator.currency != campaign.currency:
         flash("This creator cannot be recommended for that campaign.", "warning")
         return redirect(url_for("admin.dashboard"))
     application = Application.query.filter_by(campaign_id=campaign.id, creator_profile_id=creator.id).first()
@@ -127,7 +127,7 @@ def review_creator(creator_id):
 def order_detail(order_id):
     order = Order.query.get_or_404(order_id)
     creators = CreatorProfile.query.filter_by(availability="available", verification_status="verified").order_by(CreatorProfile.followers.desc()).all()
-    return render_template("admin_order.html", order=order, creators=creators)
+    return render_template("admin_order.html", order=order, creators=creators, transfer_available=transfer_available(order))
 
 
 @admin_bp.route("/orders/<int:order_id>/assign", methods=["POST"])
@@ -163,7 +163,7 @@ def mark_paid(order_id):
         flash("Payment cannot be confirmed before creator acceptance.", "warning")
         return redirect(url_for("admin.order_detail", order_id=order.id))
     reference = request.form.get("reference", "").strip()
-    if not 3 <= len(reference) <= 120 or order.payment_status != "unpaid" or order.status != "awaiting_payment":
+    if not 3 <= len(reference) <= 120 or not transfer_available(order):
         flash("Enter the bank transaction reference for an unpaid order.", "warning")
         return redirect(url_for("admin.order_detail", order_id=order.id))
     mark_order_paid(order, payment_intent_id=reference, actor_id=current_user.id)
@@ -248,7 +248,7 @@ def mark_payout(order_id):
     order.status = "complete"
     add_order_event(order, "payout_sent", "Influencer payout marked as sent by Briefvora.", current_user.id)
     if order.influencer_id:
-        notify(order.influencer_id, "Payout sent", f"Your ${order.payout} payout for {order.campaign.title} was sent.", f"/orders/{order.id}")
+        notify(order.influencer_id, "Payout sent", f"Your {order.payout} {order.currency.upper()} payout for {order.campaign.title} was sent.", f"/orders/{order.id}")
     db.session.commit()
     log_audit_event(
         "creator_payout_confirmed",

@@ -12,6 +12,7 @@ class CollaborationOffer(db.Model):
     business_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     creator_profile_id = db.Column(db.Integer, db.ForeignKey("creator_profiles.id"), nullable=False, index=True)
     amount_cents = db.Column(db.Integer, nullable=False)
+    currency = db.Column(db.String(3), default="usd", nullable=False)
     minimum_rate_cents = db.Column(db.Integer, nullable=False)
     creator_payout_cents = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(30), default="pending", nullable=False, index=True)

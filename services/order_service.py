@@ -33,7 +33,7 @@ def create_order(
     payout_cents: int | None = None,
     offer=None,
 ) -> Order:
-    payout_cents = payout_cents if payout_cents is not None else int(amount_cents * payout_percent() / 100)
+    payout_cents = payout_cents if payout_cents is not None else amount_cents * payout_percent() // 100
     order = Order(
         campaign_id=campaign.id,
         application_id=application.id if application else None,
@@ -42,6 +42,7 @@ def create_order(
         influencer_id=creator_profile.user_id if creator_profile else None,
         creator_profile_id=creator_profile.id if creator_profile else None,
         amount_cents=amount_cents,
+        currency=offer.currency if offer else campaign.currency,
         influencer_payout_cents=payout_cents,
         customer_notes=customer_notes,
     )
@@ -52,6 +53,8 @@ def create_order(
 
 
 def assign_creator(order: Order, creator_profile: CreatorProfile, actor_id: int) -> None:
+    if order.currency != creator_profile.currency:
+        raise ValueError("The order and creator must use the same currency.")
     if creator_profile.verification_status != "verified":
         raise ValueError("Only verified creators can be assigned")
     if not creator_profile.user.phone_number:

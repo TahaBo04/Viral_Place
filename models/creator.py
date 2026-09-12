@@ -15,6 +15,7 @@ class CreatorProfile(db.Model):
     followers = db.Column(db.Integer, default=0, nullable=False)
     engagement_rate = db.Column(db.Float, default=0.0, nullable=False)
     starting_rate = db.Column(db.Integer, default=0, nullable=False)
+    currency = db.Column(db.String(3), default="usd", nullable=False)
     media_kit_summary = db.Column(db.Text, nullable=False)
     portfolio_url = db.Column(db.String(255))
     availability = db.Column(db.String(30), default="available", nullable=False)

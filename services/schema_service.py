@@ -8,6 +8,10 @@ def apply_compatible_schema_updates() -> None:
     if "users" not in inspector.get_table_names():
         return
     statements = []
+    # Historical prices were USD. Preserve them rather than relabeling money as MAD.
+    for table in ("campaigns", "creator_profiles", "collaboration_offers"):
+        if table in inspector.get_table_names() and "currency" not in {column["name"] for column in inspector.get_columns(table)}:
+            statements.append(f"ALTER TABLE {table} ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'usd'")
     user_columns = {column["name"] for column in inspector.get_columns("users")}
     if "phone_number" not in user_columns:
         statements.append("ALTER TABLE users ADD COLUMN phone_number VARCHAR(32)")
@@ -82,6 +86,7 @@ def _backfill_profile_data() -> None:
             business_id=order.business_id,
             creator_profile_id=order.creator_profile_id,
             amount_cents=order.amount_cents,
+            currency=order.currency,
             minimum_rate_cents=order.creator_profile.starting_rate * 100,
             creator_payout_cents=order.influencer_payout_cents,
             status="accepted",

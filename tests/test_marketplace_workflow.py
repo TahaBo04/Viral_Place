@@ -24,7 +24,7 @@ class MarketplaceWorkflowTests(unittest.TestCase):
             SESSION_COOKIE_SECURE = False
             SESSION_PROTECTION = None
             WTF_CSRF_ENABLED = False
-            MAX_OFFER_USD = 1_000_000
+            MAX_OFFER_AMOUNT = 1_000_000
 
         self.app = create_app(TestConfig)
         initialize_database(self.app)

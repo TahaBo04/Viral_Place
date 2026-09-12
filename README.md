@@ -19,9 +19,9 @@ Optional demo data: `BRIEFVORA_DEMO=1 python app.py`. Existing local demo logins
 
 ## Bank transfers
 
-Set `COMPANY_RIB` (24 digits), `COMPANY_BANK_NAME`, and `COMPANY_ACCOUNT_HOLDER` on the server after confirming the actual company details. Until all three are configured, buyers see that bank details are pending and are asked not to send funds. No sample RIB is shown on the real site.
+Set `COMPANY_RIB` (24 digits), `COMPANY_BANK_NAME`, `COMPANY_ACCOUNT_HOLDER`, and `COMPANY_BANK_CURRENCY` on the server after confirming the actual company details. Until the account details are configured, buyers see that bank details are pending and are asked not to send funds. No sample RIB is shown on the real site. Bank currency is MAD on the live deployment.
 
-An accepted order shows its amount in USD and its `BRIEFVORA-<order id>` reference. Confirm any currency conversion with the customer outside the application. Only the buyer sees the RIB in the order. There are no card fields, uploads of bank statements, payment SDKs, or payment webhooks. Operations records received transfers and completed refunds with bank transaction references; the application does not initiate transfers or refunds.
+New creator rates and campaign budgets use `MARKETPLACE_CURRENCY=mad`. Currency is stored on each rate, campaign, offer, and order; amounts use integer minor units. Accepted orders show the exact MAD amount and their `BRIEFVORA-<order id>` reference. Existing USD records remain USD, with no numerical conversion or relabeling. Cross-currency offers and transfers are blocked for operations review. Only the buyer sees the RIB in the order. There are no card fields, uploads of bank statements, payment SDKs, or payment webhooks. Operations records received transfers and completed refunds with bank transaction references; the application does not initiate transfers or refunds.
 
 Buyers can copy the RIB/reference, download server-generated instructions, and report sending their transfer with one click. Reporting alerts operations once per order and adds an unverified timeline event; it never changes the amount or marks an order paid. Operations verifies the actual bank receipt and records its transaction reference. Confirmation then automatically notifies the buyer and creator and unlocks production. No bank API is connected, so receipt detection, currency settlement, and reconciliation are not automatic.
 
@@ -37,7 +37,7 @@ The current service uses manual deployments to avoid unexpected builds. Deploy t
 
 Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a different `ADMIN_ACCESS_CODE` in Render's environment settings. Both admin credentials require at least 16 characters. Admins sign in at `/auth/login/admin`. Do not put secrets in GitHub or share them in chat. The separate access code is an additional shared secret, not time-based MFA.
 
-The live deployment preserves the database's existing administrator account. Its additional `ADMIN_ACCESS_CODE` was generated securely and stored in Render's environment settings; retrieve it there privately. The company RIB is stored in private environment configuration, not source control. Payment instructions remain disabled until the bank name and exact account holder are also configured. Verify the settlement currency before enabling customer transfers.
+The live deployment preserves the database's existing administrator account. Its additional `ADMIN_ACCESS_CODE` was generated securely and stored in Render's environment settings; retrieve it there privately. The supplied RIB, bank name, and account holder are stored in private environment configuration, not source control. Transfer instructions are enabled for accepted MAD orders. The app cannot independently verify account ownership or receipt of funds.
 
 Render automatically supplies `RENDER_EXTERNAL_HOSTNAME`. Add purchased custom domains through `TRUSTED_HOSTS` (comma-separated exact hostnames) and the Render dashboard. Do not enable proxy trust on a directly exposed server: the current configuration assumes Render/Vercel is the only public entry point.
 

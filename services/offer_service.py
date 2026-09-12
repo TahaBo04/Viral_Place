@@ -9,7 +9,7 @@ from services.notification_service import notify, notify_admins
 from services.order_service import add_order_event, create_order, payout_percent
 
 
-def create_offer(campaign, creator_profile, business, amount_usd: int, message: str = "", application=None):
+def create_offer(campaign, creator_profile, business, amount_units: int, message: str = "", application=None):
     if campaign.business_id != business.id or business.role != "business":
         raise ValueError("Only the campaign owner can make this offer.")
     if not campaign.is_open:
@@ -18,9 +18,11 @@ def create_offer(campaign, creator_profile, business, amount_usd: int, message: 
         raise ValueError("Only verified creators can receive offers.")
     if not business.phone_number or not creator_profile.user.phone_number:
         raise ValueError("Both parties need active phone contacts before an offer.")
-    maximum = int(current_app.config.get("MAX_OFFER_USD", 1_000_000))
-    if amount_usd < creator_profile.starting_rate or amount_usd > maximum:
-        raise ValueError(f"Offer must be between ${creator_profile.starting_rate:,} and ${maximum:,} USD.")
+    if campaign.currency != creator_profile.currency:
+        raise ValueError("The campaign and creator rate must use the same currency. No automatic conversion is applied.")
+    maximum = int(current_app.config.get("MAX_OFFER_AMOUNT", 1_000_000))
+    if amount_units < creator_profile.starting_rate or amount_units > maximum:
+        raise ValueError(f"Offer must be between {creator_profile.starting_rate:,} and {maximum:,} {campaign.currency.upper()}.")
     if application is None:
         application = Application.query.filter_by(campaign_id=campaign.id, creator_profile_id=creator_profile.id).first()
     if application is None:
@@ -39,15 +41,16 @@ def create_offer(campaign, creator_profile, business, amount_usd: int, message: 
     ).first()
     if active:
         raise ValueError("This creator already has an active offer for the campaign.")
-    amount_cents = amount_usd * 100
+    amount_cents = amount_units * 100
     offer = CollaborationOffer(
         application_id=application.id,
         campaign_id=campaign.id,
         business_id=business.id,
         creator_profile_id=creator_profile.id,
         amount_cents=amount_cents,
+        currency=campaign.currency,
         minimum_rate_cents=creator_profile.starting_rate * 100,
-        creator_payout_cents=int(amount_cents * payout_percent() / 100),
+        creator_payout_cents=amount_cents * payout_percent() // 100,
         message=message or application.message,
     )
     application.status = "offer_pending"
@@ -56,7 +59,7 @@ def create_offer(campaign, creator_profile, business, amount_usd: int, message: 
     notify(
         creator_profile.user_id,
         "New creator offer",
-        f"{business.display_name} offered ${offer.amount} for {campaign.title}. Review and accept or decline.",
+        f"{business.display_name} offered {offer.amount} {offer.currency.upper()} for {campaign.title}. Review and accept or decline.",
         f"/campaigns/{campaign.id}",
     )
     notify_admins("Creator offer sent", f"Offer #{offer.id} is awaiting creator acceptance.", f"/campaigns/{campaign.id}")

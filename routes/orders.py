@@ -45,9 +45,9 @@ def transfer_instructions(order_id):
     body = "\n".join([
         "Briefvora - bank transfer instructions (not a payment receipt)",
         f"Account holder: {details['holder']}", f"Bank: {details['bank']}",
-        f"RIB: {details['rib']}", f"Order amount: {order.amount} {order.currency.upper()}",
+        f"RIB: {details['rib']}", f"Amount to transfer: {order.amount} {order.currency.upper()}",
         f"Transfer reference: BRIEFVORA-{order.id}", "",
-        "For a different transfer currency, confirm the settlement amount with operations before sending.",
+        f"Transfer currency: {details['currency'].upper()}. Send the exact amount in this currency.",
         "Operations must verify receipt before production begins.", "",
     ])
     return Response(body, mimetype="text/plain", headers={
