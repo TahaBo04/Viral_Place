@@ -25,15 +25,21 @@ An accepted order shows its amount in USD and its `BRIEFVORA-<order id>` referen
 
 ## Hosting on Render
 
+Live site: https://briefvora.onrender.com. The service was deployed on 12 September 2026 with its compute plan explicitly verified as `free`, using the existing Neon database. No Render database, persistent disk, paid compute instance, or domain was purchased.
+
+The current service uses manual deployments to avoid unexpected builds. Deploy the latest passing GitHub commit from [the service dashboard](https://dashboard.render.com/web/srv-daijrumk1f9s738gksog). The blueprint below is for creating a separate service, not updating the existing one.
+
 [Deploy the configured free service](https://dashboard.render.com/blueprint/new?repo=https://github.com/TahaBo04/Viral_Place)
 
 `render.yaml` creates a free Python web service with a generated session secret, HTTPS through Render, health checks, and GitHub deployments after checks pass. Connect an existing persistent PostgreSQL database via `DATABASE_URL`. Render's free PostgreSQL expires after 30 days, so it is deliberately not provisioned by this blueprint.
 
 Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a different `ADMIN_ACCESS_CODE` in Render's environment settings. Both admin credentials require at least 16 characters. Admins sign in at `/auth/login/admin`. Do not put secrets in GitHub or share them in chat. The separate access code is an additional shared secret, not time-based MFA.
 
+The live deployment preserves the database's existing administrator account. Its additional `ADMIN_ACCESS_CODE` was generated securely and stored in Render's environment settings; retrieve it there privately. Company bank details remain unset until the real RIB, bank name, and account holder are supplied.
+
 Render automatically supplies `RENDER_EXTERNAL_HOSTNAME`. Add purchased custom domains through `TRUSTED_HOSTS` (comma-separated exact hostnames) and the Render dashboard. Do not enable proxy trust on a directly exposed server: the current configuration assumes Render/Vercel is the only public entry point.
 
-Free Render web services sleep after 15 minutes of inactivity and can take about a minute to wake. This is a starting option with usage limits, not an uptime guarantee. Set outbound/build spending limits to zero in Render's dashboard to prevent overage charges. No paid plan or domain purchase is performed by this repository. Vercel's free Hobby plan is restricted to non-commercial use.
+Free Render web services sleep after 15 minutes of inactivity and can take about a minute to wake. The 750 monthly free instance hours are shared by all free web services in the workspace. This is a starting option with usage limits, not an uptime guarantee. A free compute plan is not a hard zero-cost cap: bandwidth and build overages can be billed when a payment method is attached. Set the build-pipeline spend limit to zero in Render's billing settings and monitor workspace bandwidth; a build limit does not cap bandwidth charges. Workspace billing limits were not changed by this deployment. No paid plan or domain purchase is performed by this repository. Vercel's free Hobby plan is restricted to non-commercial use.
 
 References: [Render free hosting](https://render.com/docs/free), [Render blueprints](https://render.com/docs/blueprint-spec), [Vercel Hobby](https://vercel.com/docs/plans/hobby).
 
