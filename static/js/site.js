@@ -24,3 +24,15 @@ document.querySelectorAll("[data-platform-toggle]").forEach((input) => {
 document.querySelectorAll("[data-profile-photo]").forEach((image) => {
   image.addEventListener("error", () => image.classList.add("is-broken"));
 });
+
+document.querySelectorAll("[data-copy-value]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const status = document.querySelector("[data-copy-status]");
+    try {
+      await navigator.clipboard.writeText(button.dataset.copyValue);
+      if (status) status.textContent = `${button.dataset.copyLabel} copied.`;
+    } catch {
+      if (status) status.textContent = "Copy unavailable. Transfer instructions are available to download.";
+    }
+  });
+});

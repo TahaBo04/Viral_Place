@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
@@ -10,7 +10,7 @@ from models.review import DealReview
 from services.logging_service import log_audit_event
 from services.notification_service import notify, notify_admins
 from services.order_service import add_order_event
-from services.payment_service import bank_details
+from services.payment_service import bank_details, transfer_available
 from services.url_service import safe_https_url
 
 orders_bp = Blueprint("orders", __name__, url_prefix="/orders")
@@ -30,7 +30,47 @@ def order_detail(order_id):
         return "Access denied", 403
     my_review = DealReview.query.filter_by(order_id=order.id, reviewer_id=current_user.id).first()
     can_review = current_user.id in (order.business_id, order.influencer_id) and order.status in REVIEWABLE_STATUSES and my_review is None
-    return render_template("order_detail.html", order=order, bank_details=bank_details(), my_review=my_review, can_review=can_review)
+    return render_template("order_detail.html", order=order, bank_details=bank_details(), transfer_available=transfer_available(order), my_review=my_review, can_review=can_review)
+
+
+@orders_bp.route("/<int:order_id>/transfer-instructions")
+@login_required
+def transfer_instructions(order_id):
+    order = Order.query.get_or_404(order_id)
+    if current_user.id != order.business_id:
+        abort(403)
+    details = bank_details()
+    if not details or not transfer_available(order):
+        abort(409)
+    body = "\n".join([
+        "Briefvora - bank transfer instructions (not a payment receipt)",
+        f"Account holder: {details['holder']}", f"Bank: {details['bank']}",
+        f"RIB: {details['rib']}", f"Order amount: {order.amount} {order.currency.upper()}",
+        f"Transfer reference: BRIEFVORA-{order.id}", "",
+        "For a different transfer currency, confirm the settlement amount with operations before sending.",
+        "Operations must verify receipt before production begins.", "",
+    ])
+    return Response(body, mimetype="text/plain", headers={
+        "Content-Disposition": f'attachment; filename="briefvora-transfer-{order.id}.txt"',
+        "Cache-Control": "private, no-store, max-age=0",
+    })
+
+
+@orders_bp.route("/<int:order_id>/report-transfer", methods=["POST"])
+@login_required
+def report_transfer(order_id):
+    # Serialize reports on PostgreSQL so retries cannot duplicate operations alerts.
+    order = Order.query.filter_by(id=order_id).with_for_update().first_or_404()
+    if current_user.id != order.business_id:
+        abort(403)
+    if not bank_details() or not transfer_available(order):
+        abort(409)
+    if not order.transfer_reported_at:
+        add_order_event(order, "transfer_reported", "Customer reported sending the transfer. Bank receipt has not been verified.", current_user.id)
+        notify_admins("Transfer awaiting verification", f"The buyer reported a transfer for BRIEFVORA-{order.id}. Verify the amount and receipt in the bank before confirming payment.", f"/admin/orders/{order.id}")
+        db.session.commit()
+    flash("Operations has been notified. Your payment is awaiting bank verification.", "info")
+    return redirect(url_for("orders.order_detail", order_id=order.id, _anchor="bank-transfer"))
 
 
 @orders_bp.route("/<int:order_id>/checkout", methods=["POST"])

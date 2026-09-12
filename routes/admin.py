@@ -158,12 +158,12 @@ def assign(order_id):
 @login_required
 @admin_required
 def mark_paid(order_id):
-    order = Order.query.get_or_404(order_id)
+    order = Order.query.filter_by(id=order_id).with_for_update().first_or_404()
     if not order.offer or order.offer.status != "accepted":
         flash("Payment cannot be confirmed before creator acceptance.", "warning")
         return redirect(url_for("admin.order_detail", order_id=order.id))
     reference = request.form.get("reference", "").strip()
-    if not reference or order.payment_status != "unpaid":
+    if not 3 <= len(reference) <= 120 or order.payment_status != "unpaid" or order.status != "awaiting_payment":
         flash("Enter the bank transaction reference for an unpaid order.", "warning")
         return redirect(url_for("admin.order_detail", order_id=order.id))
     mark_order_paid(order, payment_intent_id=reference, actor_id=current_user.id)

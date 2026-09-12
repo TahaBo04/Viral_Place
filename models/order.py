@@ -48,6 +48,10 @@ class Order(db.Model):
     )
 
     @property
+    def transfer_reported_at(self):
+        return next((event.created_at for event in self.events if event.event_type == "transfer_reported"), None)
+
+    @property
     def amount(self) -> str:
         return f"{self.amount_cents / 100:,.2f}"
 

@@ -23,6 +23,8 @@ Set `COMPANY_RIB` (24 digits), `COMPANY_BANK_NAME`, and `COMPANY_ACCOUNT_HOLDER`
 
 An accepted order shows its amount in USD and its `BRIEFVORA-<order id>` reference. Confirm any currency conversion with the customer outside the application. Only the buyer sees the RIB in the order. There are no card fields, uploads of bank statements, payment SDKs, or payment webhooks. Operations records received transfers and completed refunds with bank transaction references; the application does not initiate transfers or refunds.
 
+Buyers can copy the RIB/reference, download server-generated instructions, and report sending their transfer with one click. Reporting alerts operations once per order and adds an unverified timeline event; it never changes the amount or marks an order paid. Operations verifies the actual bank receipt and records its transaction reference. Confirmation then automatically notifies the buyer and creator and unlocks production. No bank API is connected, so receipt detection, currency settlement, and reconciliation are not automatic.
+
 ## Hosting on Render
 
 Live site: https://briefvora.onrender.com. The service was deployed on 12 September 2026 with its compute plan explicitly verified as `free`, using the existing Neon database. No Render database, persistent disk, paid compute instance, or domain was purchased.
@@ -35,7 +37,7 @@ The current service uses manual deployments to avoid unexpected builds. Deploy t
 
 Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a different `ADMIN_ACCESS_CODE` in Render's environment settings. Both admin credentials require at least 16 characters. Admins sign in at `/auth/login/admin`. Do not put secrets in GitHub or share them in chat. The separate access code is an additional shared secret, not time-based MFA.
 
-The live deployment preserves the database's existing administrator account. Its additional `ADMIN_ACCESS_CODE` was generated securely and stored in Render's environment settings; retrieve it there privately. Company bank details remain unset until the real RIB, bank name, and account holder are supplied.
+The live deployment preserves the database's existing administrator account. Its additional `ADMIN_ACCESS_CODE` was generated securely and stored in Render's environment settings; retrieve it there privately. The company RIB is stored in private environment configuration, not source control. Payment instructions remain disabled until the bank name and exact account holder are also configured. Verify the settlement currency before enabling customer transfers.
 
 Render automatically supplies `RENDER_EXTERNAL_HOSTNAME`. Add purchased custom domains through `TRUSTED_HOSTS` (comma-separated exact hostnames) and the Render dashboard. Do not enable proxy trust on a directly exposed server: the current configuration assumes Render/Vercel is the only public entry point.
 
@@ -53,4 +55,4 @@ pip-audit -r requirements.txt
 
 CI runs the tests, code security scan, and dependency vulnerability audit. Tests cover role and private-campaign access, forged payment attempts, RIB visibility, admin confirmation, unsafe links, HTML escaping, request limits, duplicate inputs, login abuse, and production configuration. See [SECURITY.md](SECURITY.md) for scope and operational requirements.
 
-Visual assets: the original Briefvora mark; menu icon from [Lucide](https://lucide.dev/license); creator photograph from [Unsplash's image CDN](https://images.unsplash.com/photo-1492691527719-9d1e07e534b4). Legacy image files remain unreferenced for repository compatibility.
+Visual assets: the original Briefvora mark; menu, copy, and download icons from [Lucide](https://lucide.dev/license); creator photograph from [Unsplash's image CDN](https://images.unsplash.com/photo-1492691527719-9d1e07e534b4). Legacy image files remain unreferenced for repository compatibility.

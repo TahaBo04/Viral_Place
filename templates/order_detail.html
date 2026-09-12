@@ -6,7 +6,7 @@
 {% block content %}
 <section class="detail-grid">
   <article class="section-panel"><p class="eyebrow">ORDER CONTROL</p><div class="order-facts"><div><span>CUSTOMER</span><strong>{{ order.business.display_name }}</strong></div><div><span>CREATOR</span><strong>{{ order.creator_profile.display_name if order.creator_profile else 'Briefvora sourcing' }}</strong></div><div><span>PAYMENT</span><strong>{{ order.payment_status.replace('_',' ') }}</strong></div><div><span>CREATOR PAYOUT</span><strong>${{ order.payout }} • {{ order.payout_status.replace('_',' ') }}</strong></div></div>
-  {% if current_user.id == order.business_id and order.payment_status == 'unpaid' and order.offer and order.offer.status == 'accepted' %}
+  {% if current_user.id == order.business_id and transfer_available %}
   <section class="bank-transfer" id="bank-transfer">
     <p class="eyebrow">PAY BY BANK TRANSFER / VERSEMENT</p>
     <h2>Company bank details</h2>
@@ -14,11 +14,16 @@
       <dl class="bank-details">
         <div><dt>ACCOUNT HOLDER</dt><dd>{{ bank_details.holder }}</dd></div>
         <div><dt>BANK</dt><dd>{{ bank_details.bank }}</dd></div>
-        <div><dt>RIB</dt><dd class="rib-value">{{ bank_details.rib }}</dd></div>
+        <div><dt>RIB</dt><dd class="bank-copy-row"><span class="rib-value">{{ bank_details.rib_display }}</span><button class="icon-button" type="button" data-copy-value="{{ bank_details.rib }}" data-copy-label="RIB" aria-label="Copy RIB" title="Copy RIB"><img src="{{ url_for('static', filename='copy.svg') }}" width="18" height="18" alt=""></button></dd></div>
         <div><dt>AMOUNT DUE</dt><dd>${{ order.amount }} {{ order.currency|upper }}</dd></div>
-        <div><dt>TRANSFER REFERENCE</dt><dd>BRIEFVORA-{{ order.id }}</dd></div>
+        <div><dt>TRANSFER REFERENCE</dt><dd class="bank-copy-row"><span>BRIEFVORA-{{ order.id }}</span><button class="icon-button" type="button" data-copy-value="BRIEFVORA-{{ order.id }}" data-copy-label="Reference" aria-label="Copy transfer reference" title="Copy transfer reference"><img src="{{ url_for('static', filename='copy.svg') }}" width="18" height="18" alt=""></button></dd></div>
       </dl>
       <p>Include this order reference with your transfer. Operations will confirm receipt before production begins. For currency conversion, confirm the settlement amount with operations before sending.</p>
+      <div class="transfer-actions">
+        <a class="icon-button" href="{{ url_for('orders.transfer_instructions', order_id=order.id) }}" aria-label="Download transfer instructions" title="Download transfer instructions"><img src="{{ url_for('static', filename='download.svg') }}" width="20" height="20" alt=""></a>
+        {% if order.transfer_reported_at %}<span class="status-badge">Transfer reported. Awaiting bank verification.</span>{% else %}<form method="post" action="{{ url_for('orders.report_transfer', order_id=order.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button-primary" type="submit">I sent the transfer</button></form>{% endif %}
+      </div>
+      <p class="copy-status" data-copy-status role="status" aria-live="polite"></p>
     {% else %}
       <p>Bank details are being finalized. Please wait for the verified company RIB before sending any funds.</p>
       <span class="status-badge">Awaiting company bank details</span>

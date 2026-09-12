@@ -11,7 +11,11 @@ def bank_details() -> dict | None:
     holder = current_app.config.get("COMPANY_ACCOUNT_HOLDER", "").strip()
     if not re.fullmatch(r"[0-9]{24}", rib) or not bank or not holder:
         return None
-    return {"rib": rib, "bank": bank, "holder": holder}
+    return {"rib": rib, "rib_display": " ".join(rib[i:i + 4] for i in range(0, 24, 4)), "bank": bank, "holder": holder}
+
+
+def transfer_available(order) -> bool:
+    return bool(order.payment_status == "unpaid" and order.status == "awaiting_payment" and order.offer and order.offer.status == "accepted")
 
 
 def refund_order(order, actor_id: int | None = None, reference: str = "") -> None:

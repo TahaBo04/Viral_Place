@@ -197,6 +197,13 @@ input::placeholder, textarea::placeholder { color: #777d88; }
 .bank-details dt { color: var(--muted); font-size: 11px; font-weight: 700; }
 .bank-details dd { margin: 0; overflow-wrap: anywhere; }
 .rib-value { font: 500 19px/1.6 monospace; color: var(--accent); }
+.bank-details .bank-copy-row { display: flex; align-items: center; gap: 12px; }
+.bank-copy-row > span { min-width: 0; }
+.icon-button { display: inline-grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; padding: 0; border: 1px solid #b8bec9; border-radius: 4px; background: #fff; cursor: pointer; }
+.icon-button:hover { background: var(--accent-soft); border-color: var(--accent); }
+.transfer-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.transfer-actions form { margin: 0; }
+.copy-status { min-height: 24px; font-size: 13px; color: var(--accent); }
 .site-footer { display: grid; grid-template-columns: 1fr auto; gap: 24px; padding: 40px 0 28px; border-top: 2px solid var(--black); color: var(--muted); }
 .footer-mark { color: var(--black); font: 700 30px "Space Grotesk", Arial, sans-serif; }
 .site-footer p { font-size: 13px; }

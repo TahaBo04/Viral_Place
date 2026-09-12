@@ -152,6 +152,74 @@ class MarketplaceWorkflowTests(unittest.TestCase):
             self.assertEqual(order.payment_status, "unpaid")
             self.assertEqual(order.amount_cents, 80000)
 
+    def test_transfer_report_alerts_admin_once_without_confirming_payment(self):
+        from models.notification import Notification
+
+        order_id = self.accepted_order()
+        self.app.config.update(COMPANY_RIB="123456789012345678901234", COMPANY_BANK_NAME="Bank Example", COMPANY_ACCOUNT_HOLDER="Example Company")
+        self.login_as(self.brand_id)
+        for _ in range(2):
+            response = self.client.post(f"/orders/{order_id}/report-transfer", data={"payment_status": "paid", "amount": "1"})
+            self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            order = db.session.get(Order, order_id)
+            self.assertEqual(order.payment_status, "unpaid")
+            self.assertEqual(order.status, "awaiting_payment")
+            self.assertEqual(order.amount_cents, 80000)
+            self.assertEqual(sum(e.event_type == "transfer_reported" for e in order.events), 1)
+            self.assertEqual(Notification.query.filter_by(title="Transfer awaiting verification", user_id=self.admin_id).count(), 1)
+        page = self.client.get(f"/orders/{order_id}").data
+        self.assertIn(b"Awaiting bank verification", page)
+        self.assertNotIn(b"I sent the transfer", page)
+        self.login_as(self.admin_id)
+        self.assertIn(b"Customer reported a transfer", self.client.get(f"/admin/orders/{order_id}").data)
+        self.client.post(f"/admin/orders/{order_id}/mark-paid", data={"reference": "BANK-VERIFIED-123"})
+        with self.app.app_context():
+            self.assertEqual(db.session.get(Order, order_id).status, "in_production")
+            self.assertEqual(Notification.query.filter_by(title="Start production", user_id=self.creator_ids[0][0]).count(), 1)
+            self.assertEqual(Notification.query.filter_by(title="Payment confirmed", user_id=self.brand_id).count(), 1)
+
+    def test_transfer_actions_require_buyer_and_complete_bank_details(self):
+        order_id = self.accepted_order()
+        self.login_as(self.brand_id)
+        self.assertEqual(self.client.post(f"/orders/{order_id}/report-transfer").status_code, 409)
+        self.assertEqual(self.client.get(f"/orders/{order_id}/transfer-instructions").status_code, 409)
+        self.app.config.update(COMPANY_RIB="123456789012345678901234", COMPANY_BANK_NAME="Bank Example", COMPANY_ACCOUNT_HOLDER="Example Company")
+        for user_id in [self.creator_ids[0][0], self.creator_ids[1][0], self.admin_id]:
+            self.login_as(user_id)
+            self.assertEqual(self.client.post(f"/orders/{order_id}/report-transfer").status_code, 403)
+            self.assertEqual(self.client.get(f"/orders/{order_id}/transfer-instructions").status_code, 403)
+        self.login_as(self.brand_id)
+        self.assertEqual(self.client.get(f"/orders/{order_id}/report-transfer").status_code, 405)
+        self.app.config["WTF_CSRF_ENABLED"] = True
+        self.assertEqual(self.client.post(f"/orders/{order_id}/report-transfer").status_code, 400)
+
+    def test_transfer_download_uses_server_values_and_is_not_cached(self):
+        order_id = self.accepted_order()
+        self.app.config.update(COMPANY_RIB="123456789012345678901234", COMPANY_BANK_NAME="Bank Example", COMPANY_ACCOUNT_HOLDER="Example Company")
+        self.login_as(self.brand_id)
+        response = self.client.get(f"/orders/{order_id}/transfer-instructions?amount=1&rib=ATTACKER")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/plain")
+        self.assertIn("no-store", response.headers["Cache-Control"])
+        self.assertIn(f'briefvora-transfer-{order_id}.txt', response.headers["Content-Disposition"])
+        for value in [b"123456789012345678901234", b"800.00 USD", f"BRIEFVORA-{order_id}".encode(), b"not a payment receipt"]:
+            self.assertIn(value, response.data)
+        self.assertNotIn(b"ATTACKER", response.data)
+
+    def test_transfer_actions_reject_ineligible_orders(self):
+        order_id = self.accepted_order()
+        self.app.config.update(COMPANY_RIB="123456789012345678901234", COMPANY_BANK_NAME="Bank Example", COMPANY_ACCOUNT_HOLDER="Example Company")
+        self.login_as(self.brand_id)
+        for status, payment, offer in [("awaiting_payment", "unpaid", "pending"), ("in_production", "paid", "accepted"), ("refunded", "refunded", "accepted"), ("cancelled", "unpaid", "accepted")]:
+            with self.app.app_context():
+                order = db.session.get(Order, order_id)
+                order.status, order.payment_status, order.offer.status = status, payment, offer
+                db.session.commit()
+            self.assertEqual(self.client.post(f"/orders/{order_id}/report-transfer").status_code, 409)
+            self.assertEqual(self.client.get(f"/orders/{order_id}/transfer-instructions").status_code, 409)
+            self.assertNotIn(b"I sent the transfer", self.client.get(f"/orders/{order_id}").data)
+
     def test_admin_confirmation_is_fresh_referenced_and_idempotent(self):
         order_id = self.accepted_order()
         self.login_as(self.admin_id)
