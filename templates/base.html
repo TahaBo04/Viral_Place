@@ -61,6 +61,12 @@
       <p>Independent minds. Shared ambitions.</p>
     </div>
     <div class="footer-links">
+      {% if config.get('POLICIES_PUBLISHED') or (current_user.is_authenticated and current_user.role == 'admin') %}
+        <a href="{{ url_for('legal.policy', page='terms') }}">TERMS</a>
+        <a href="{{ url_for('legal.policy', page='privacy') }}">PRIVACY</a>
+        <a href="{{ url_for('legal.policy', page='cancellations') }}">CANCELLATIONS</a>
+      {% endif %}
+      {% if current_user.is_authenticated %}<a href="{{ url_for('account.security') }}">ACCOUNT SECURITY</a>{% endif %}
       <a href="{{ url_for('campaigns.list_campaigns') }}">CAMPAIGNS</a>
       <a href="{{ url_for('creators.list_creators') }}">CREATORS</a>
     </div>

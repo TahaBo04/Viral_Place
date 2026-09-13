@@ -47,6 +47,8 @@ References: [Render free hosting](https://render.com/docs/free), [Render bluepri
 
 ## Verification
 
+Account security, email activation, encrypted backups/restore drills, monitoring, and policy publication are documented in [OPERATIONS.md](OPERATIONS.md). The current launch blockers are tracked in [LAUNCH_READINESS.md](LAUNCH_READINESS.md). A user can change their password at `/auth/security`; live email recovery remains unavailable until a verified sender is configured. Legal drafts remain admin-only until reviewed and completed.
+
 ```bash
 python -m unittest discover -s tests -v
 bandit -r app.py config.py wsgi.py routes services models -x services/demo_seed.py

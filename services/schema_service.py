@@ -13,6 +13,14 @@ def apply_compatible_schema_updates() -> None:
         if table in inspector.get_table_names() and "currency" not in {column["name"] for column in inspector.get_columns(table)}:
             statements.append(f"ALTER TABLE {table} ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'usd'")
     user_columns = {column["name"] for column in inspector.get_columns("users")}
+    if "terms_version" not in user_columns:
+        statements.append("ALTER TABLE users ADD COLUMN terms_version VARCHAR(32)")
+    if "terms_accepted_at" not in user_columns:
+        statements.append("ALTER TABLE users ADD COLUMN terms_accepted_at TIMESTAMP")
+    if "email_verified_at" not in user_columns:
+        statements.append("ALTER TABLE users ADD COLUMN email_verified_at TIMESTAMP")
+    if "auth_version" not in user_columns:
+        statements.append("ALTER TABLE users ADD COLUMN auth_version INTEGER NOT NULL DEFAULT 0")
     if "phone_number" not in user_columns:
         statements.append("ALTER TABLE users ADD COLUMN phone_number VARCHAR(32)")
     if "phone_region" not in user_columns:

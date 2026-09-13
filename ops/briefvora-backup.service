@@ -1,0 +1,15 @@
+[Unit]
+Description=Briefvora encrypted database backup and local restore drill
+
+[Service]
+Type=oneshot
+WorkingDirectory=/mnt/c/users/hp/desktop/Viral_Place
+Environment=LD_LIBRARY_PATH=/home/taha/.local/briefvora-pg/usr/lib/x86_64-linux-gnu
+ExecStart=/mnt/c/users/hp/desktop/Viral_Place/.venv/bin/python scripts/backup_database.py --pg-bin /home/taha/.local/briefvora-pg/usr/lib/postgresql/17/bin --restore-drill
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+TimeoutStartSec=15min
+
+[Install]
+WantedBy=default.target

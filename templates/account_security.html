@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Account security | Briefvora{% endblock %}
+{% block eyebrow %}YOUR ACCOUNT{% endblock %}
+{% block header_title %}Account security{% endblock %}
+{% block header_subtitle %}{% endblock %}
+{% block content %}
+<section class="form-section narrow">
+  <div class="section-panel">
+    <h2>Email address</h2>
+    <p>{{ current_user.email }}</p>
+    <p>{{ 'Verified' if current_user.email_verified_at else 'Not verified' }}</p>
+    {% if not current_user.email_verified_at and email_available %}
+    <form method="post" action="{{ url_for('account.resend_verification') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="button-secondary" type="submit">Send verification email</button>
+    </form>
+    {% elif not current_user.email_verified_at %}<p>Email verification is not available yet.</p>{% endif %}
+  </div>
+  <h2>Change password</h2>
+  <form method="post" class="form-card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>CURRENT PASSWORD<input type="password" name="current_password" maxlength="128" autocomplete="current-password" required></label>
+    <label>NEW PASSWORD<input type="password" name="new_password" minlength="12" maxlength="128" autocomplete="new-password" required></label>
+    <label>CONFIRM PASSWORD<input type="password" name="confirm_password" minlength="12" maxlength="128" autocomplete="new-password" required></label>
+    <button class="button-primary" type="submit">Change password and sign out everywhere</button>
+  </form>
+</section>
+{% endblock %}

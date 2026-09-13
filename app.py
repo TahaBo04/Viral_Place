@@ -13,6 +13,10 @@ from extensions import csrf, db, login_manager
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    from services.account_security_service import validate_email_config
+    validate_email_config(app)
+    from routes.legal import legal_bp, require_accepted_terms, validate_policy_config
+    validate_policy_config(app)
     for key in ("MARKETPLACE_CURRENCY", "COMPANY_BANK_CURRENCY"):
         if app.config.get(key, "usd") not in ("mad", "usd"):
             raise RuntimeError(f"{key} must be mad or usd.")
@@ -33,12 +37,14 @@ def create_app(config_class=Config):
     app.before_request(protect_request)
 
     from models.user import User
-    from models import campaign, collaboration, creator, logs, notification, offer, order, review, security, social, user  # noqa: F401
+    from models import account_email, campaign, collaboration, creator, logs, notification, offer, order, review, security, social, user  # noqa: F401
 
     @login_manager.user_loader
     def load_user(user_id: str):
         try:
-            return db.session.get(User, int(user_id))
+            identifier, _, version = user_id.partition(":")
+            user = db.session.get(User, int(identifier))
+            return user if user and user.auth_version == int(version or "0") else None
         except (TypeError, ValueError):
             return None
 
@@ -52,6 +58,7 @@ def create_app(config_class=Config):
     from routes.orders import orders_bp
     from routes.offers import offers_bp
     from routes.profile import profile_bp
+    from routes.account import account_bp, require_verified_email
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(creators_bp)
@@ -63,6 +70,10 @@ def create_app(config_class=Config):
     app.register_blueprint(influencer_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(account_bp)
+    app.register_blueprint(legal_bp)
+    app.before_request(require_verified_email)
+    app.before_request(require_accepted_terms)
 
     @app.after_request
     def set_security_headers(response):
@@ -76,7 +87,7 @@ def create_app(config_class=Config):
         )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         if app.config.get("PRODUCTION"):
@@ -136,6 +147,17 @@ def create_app(config_class=Config):
     def not_found(_error):
         return render_template("error.html", code=404, message="That page does not exist."), 404
 
+    @app.errorhandler(403)
+    @app.errorhandler(409)
+    @app.errorhandler(503)
+    def unavailable(error):
+        return render_template("error.html", code=error.code, message=error.description), error.code
+
+    @app.cli.command("dispatch-mail")
+    def dispatch_account_mail():
+        from services.account_security_service import dispatch_mail
+        print(f"Messages accepted by provider: {dispatch_mail()}")
+
     @app.errorhandler(500)
     def server_error(_error):
         db.session.rollback()
@@ -158,6 +180,8 @@ def initialize_database(app):
         if os.environ.get("BRIEFVORA_DEMO", os.environ.get("VIRAL_PLACE_DEMO")) == "1":
             from services.demo_seed import seed_demo_data
             seed_demo_data()
+    from services.account_security_service import start_mail_worker
+    start_mail_worker(app)
 
 
 if __name__ == "__main__":

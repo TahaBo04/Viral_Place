@@ -14,6 +14,7 @@
     {% if is_admin %}<label>OPERATIONS ACCESS CODE<input type="password" name="admin_access_code" maxlength="128" autocomplete="off" required></label>{% endif %}
     {% if not is_admin %}<label class="check-row"><input type="checkbox" name="remember"><span>KEEP ME SIGNED IN</span></label>{% endif %}
     <button class="button-primary" type="submit">{{ 'OPEN BRAND HUB' if is_brand else 'OPEN OPERATIONS' if is_admin else 'OPEN CREATOR HUB' }}</button>
+    <p class="form-note"><a href="{{ url_for('account.forgot_password') }}">FORGOT PASSWORD?</a></p>
     {% if not is_admin %}<p class="form-note">NEW HERE? <a href="{{ url_for('auth.register', account_type=portal_role) }}">CREATE {{ 'A BRAND' if is_brand else 'AN INFLUENCER' }} ACCOUNT</a></p>
     <p class="form-note">WRONG WORKSPACE? <a href="{{ url_for('auth.login', account_type='influencer' if is_brand else 'business') }}">USE {{ 'INFLUENCER' if is_brand else 'BRAND' }} LOGIN</a></p>{% endif %}
   </form>

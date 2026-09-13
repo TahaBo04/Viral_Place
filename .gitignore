@@ -19,3 +19,7 @@ static/uploads/profile_pics/*
 instance/
 .vercel
 .env*.local
+*.dump
+*.dump.gpg
+*.dump.json
+backup.key

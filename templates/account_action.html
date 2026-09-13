@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% set heading = 'Password recovery' if mode == 'forgot' else 'Reset password' if mode == 'reset' else 'Verify email' %}
+{% block title %}{{ heading }} | Briefvora{% endblock %}
+{% block eyebrow %}ACCOUNT SECURITY{% endblock %}
+{% block header_title %}{{ heading }}{% endblock %}
+{% block header_subtitle %}{% endblock %}
+{% block content %}
+<section class="form-section narrow">
+  {% if mode == 'forgot' and not available %}
+    <p>Email recovery is not available yet. {% if config.get('SUPPORT_EMAIL') %}Contact <a href="mailto:{{ config.SUPPORT_EMAIL }}">{{ config.SUPPORT_EMAIL }}</a>.{% endif %}</p>
+  {% else %}
+  <form method="post" class="form-card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if mode == 'forgot' %}
+      <label>EMAIL<input type="email" name="email" maxlength="120" autocomplete="email" required></label>
+    {% else %}
+      <label data-account-token-label>RECOVERY CODE<input name="token" data-account-token value="{{ request.form.get('token', '') }}" maxlength="512" autocomplete="off" spellcheck="false" required></label>
+    {% endif %}
+    {% if mode == 'reset' %}
+      <label>NEW PASSWORD<input type="password" name="new_password" minlength="12" maxlength="128" autocomplete="new-password" required></label>
+      <label>CONFIRM PASSWORD<input type="password" name="confirm_password" minlength="12" maxlength="128" autocomplete="new-password" required></label>
+    {% endif %}
+    <button class="button-primary" type="submit">{{ 'Send reset link' if mode == 'forgot' else 'Update password' if mode == 'reset' else 'Verify email' }}</button>
+  </form>
+  {% endif %}
+  <p class="form-note"><a href="{{ url_for('auth.login') }}">Back to login</a>{% if mode == 'reset' %} | <a href="{{ url_for('account.forgot_password') }}">Request a new link</a>{% endif %}</p>
+</section>
+{% endblock %}

@@ -1,6 +1,17 @@
 const toggle = document.querySelector("[data-menu-toggle]");
 const nav = document.getElementById("mainNav");
 
+const tokenField = document.querySelector("[data-account-token]");
+if (tokenField) {
+  const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+  if (token && token.length <= 512) tokenField.value = token;
+  if (window.location.hash) history.replaceState(null, "", window.location.pathname);
+  if (tokenField.value) {
+    tokenField.type = "hidden";
+    document.querySelector("[data-account-token-label]").hidden = true;
+  }
+}
+
 if (toggle && nav) {
   toggle.addEventListener("click", () => {
     const open = nav.classList.toggle("is-open");

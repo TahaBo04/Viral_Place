@@ -24,6 +24,7 @@
   </fieldset>
   {% endif %}
   <label class="check-row"><input type="checkbox" name="phone_active_confirmed" required><span>I CONFIRM THIS NUMBER IS ACTIVE AND BRIEFVORA MAY CONTACT ME ABOUT MY DEALS.</span></label>
+  {% if config.get('POLICIES_PUBLISHED') %}{% include "legal_agreement.html" %}{% endif %}
   <button class="button-primary" type="submit">{{ 'CREATE BRAND ACCOUNT' if is_brand else 'CREATE INFLUENCER ACCOUNT' }}</button>
   <p class="form-note">{{ 'Companies enter immediately with no identity approval delay.' if is_brand else 'Creators complete social account ownership review before appearing in discovery.' }}</p>
   <p class="form-note">WRONG ACCOUNT TYPE? <a href="{{ url_for('auth.register', account_type='influencer' if is_brand else 'business') }}">SWITCH TO {{ 'INFLUENCER' if is_brand else 'BRAND' }} SIGNUP</a></p>

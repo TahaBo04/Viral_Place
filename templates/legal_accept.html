@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Review terms | Briefvora{% endblock %}
+{% block eyebrow %}YOUR AGREEMENT{% endblock %}
+{% block header_title %}Review terms{% endblock %}
+{% block header_subtitle %}Version {{ config.POLICY_VERSION }}{% endblock %}
+{% block content %}
+<section class="form-section narrow">
+  <form method="post" class="form-card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% include "legal_agreement.html" %}
+    <button class="button-primary" type="submit">Accept and continue</button>
+  </form>
+</section>
+{% endblock %}

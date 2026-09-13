@@ -26,6 +26,13 @@ class User(db.Model, UserMixin):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_login_at = db.Column(db.DateTime)
+    email_verified_at = db.Column(db.DateTime)
+    auth_version = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    terms_version = db.Column(db.String(32))
+    terms_accepted_at = db.Column(db.DateTime)
+
+    def get_id(self):
+        return f"{self.id}:{self.auth_version}"
 
     creator_profile = db.relationship(
         "CreatorProfile",

@@ -3,7 +3,7 @@ import os
 import secrets
 import re
 
-from flask import Blueprint, flash, make_response, redirect, render_template, request, session, url_for
+from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -15,6 +15,7 @@ from services.contact_service import normalize_phone
 from services.logging_service import log_login
 from services.platform_service import parse_social_accounts, replace_social_accounts
 from services.url_service import safe_https_url
+from services.account_security_service import request_email
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 ACCOUNT_TYPES = ("business", "influencer")
@@ -35,6 +36,9 @@ def register(account_type):
         return redirect(url_for("auth.register"))
 
     if request.method == "POST":
+        if current_app.config.get("POLICIES_PUBLISHED") and request.form.get("accept_terms") != "on":
+            flash("Review and accept the terms before creating an account.", "warning")
+            return render_template("register.html", portal_role=role), 400
         first_name = request.form.get("first_name", "").strip()
         last_name = request.form.get("last_name", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -95,6 +99,8 @@ def register(account_type):
             phone_number=phone_number,
             phone_region=phone_region or None,
             phone_confirmed_at=datetime.utcnow(),
+            terms_version=current_app.config.get("POLICY_VERSION") if current_app.config.get("POLICIES_PUBLISHED") else None,
+            terms_accepted_at=datetime.utcnow() if current_app.config.get("POLICIES_PUBLISHED") else None,
         )
         db.session.add(user)
         if social_accounts:
@@ -108,6 +114,7 @@ def register(account_type):
 
         session.clear()
         login_user(user)
+        request_email(user.email, "verify", user)
         flash("Welcome to Briefvora. Your account is ready.", "success")
         if user.role == "business":
             return redirect(url_for("business.dashboard"))

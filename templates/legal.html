@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% set heading = 'Terms and conditions' if policy == 'terms' else 'Privacy notice' if policy == 'privacy' else 'Cancellations and refunds' %}
+{% block title %}{{ heading }} | Briefvora{% endblock %}
+{% block eyebrow %}BRIEFVORA{% endblock %}
+{% block header_title %}{{ heading }}{% endblock %}
+{% block header_subtitle %}Version {{ config.get('POLICY_VERSION', 'draft') }}{% endblock %}
+{% block content %}
+<article class="form-section policy-text">
+  {% if not config.get('POLICIES_PUBLISHED') %}<p class="flash flash-warning">DRAFT FOR OWNER AND LEGAL REVIEW. Not published or in force.</p>{% endif %}
+  <section class="section-panel">
+    <h2>Operator and contact</h2>
+    <p>Briefvora is operated by {{ config.get('BUSINESS_LEGAL_NAME') or '[Legal operator and business status to confirm]' }}.</p>
+    <p>Business address: {{ config.get('BUSINESS_ADDRESS') or '[No business address provided yet]' }}.</p>
+    <p>Registration and tax details: {{ config.get('BUSINESS_REGISTRATION') or '[Applicable registration and tax details to confirm]' }}.</p>
+    <p>Contact: {% if config.get('SUPPORT_EMAIL') %}<a href="mailto:{{ config.SUPPORT_EMAIL }}">{{ config.SUPPORT_EMAIL }}</a>{% else %}[Public support email to confirm]{% endif %}.</p>
+  </section>
+  {% if policy == 'terms' %}
+  <section class="section-panel">
+    <h2>Agreed work and responsibilities</h2>
+    <p>Briefvora connects brands and independent creators and coordinates campaign selection, payment confirmation, production review, and delivery. The accepted brief and offer must record the deliverables, deadlines, price and currency, publication obligations, permitted content usage, and any agreed revisions. Do not proceed with payment while these terms are unresolved.</p>
+    <p>Creators remain responsible for delivering the content and services they accept. Brands are responsible for accurate briefs, lawful claims, necessary materials, and timely feedback. Both parties must respect intellectual property, privacy, advertising-disclosure requirements, and the rules of the relevant publishing platform. Content usage rights must be expressly agreed; payment alone does not establish an unlimited transfer of rights.</p>
+  </section>
+  <section class="section-panel">
+    <h2>No guaranteed marketing results</h2>
+    <p>Unless a specific performance commitment is expressly accepted in a separate written agreement by the party giving that commitment, campaign goals and projections are objectives, not guarantees. Neither Briefvora nor a creator promises a particular number of views, impressions, followers, leads, conversions, sales, revenue, or return on investment.</p>
+    <p>To the extent permitted by applicable law, Briefvora is not liable solely because an influencer's otherwise conforming work fails to achieve a brand's desired marketing or commercial outcome. Audience response, platform algorithms, market conditions, product quality, pricing, and the brand's own sales process may affect results.</p>
+    <p>This provision does not excuse missing agreed deliverables, unauthorized use of content, misrepresentation, or breach of an express performance commitment. It does not exclude liability for fraud, gross negligence, or any responsibility or remedy that cannot lawfully be excluded. A missed campaign target and a failure to deliver agreed work are different issues.</p>
+  </section>
+  <section class="section-panel">
+    <h2>Payment and disputes</h2>
+    <p>Bank-transfer instructions are issued for eligible accepted orders. Pay only the amount, currency, account, and reference shown for that order. Reporting a transfer does not prove receipt. Operations confirms receipt against bank records before production is unlocked. Briefvora does not offer automatic bank verification, card processing, or a regulated escrow service through this website.</p>
+    <p>Notify support of a dispute with the order reference and relevant evidence. Do not include passwords or banking login details. The accepted agreement, actual work performed, and applicable law determine the available remedies. See the <a href="{{ url_for('legal.policy', page='cancellations') }}">cancellation and refund policy</a>. Nothing in these terms removes mandatory legal rights or dictates an exclusive forum contrary to applicable law.</p>
+  </section>
+  {% elif policy == 'privacy' %}
+  <section class="section-panel">
+    <h2>Information collected and why</h2>
+    <p>Account information includes your name, email, password hash, role, and contact number. Brand accounts provide company details; creator accounts provide social profiles, audience information, rates, and submitted profile content. Campaigns, applications, offers, orders, reviews, delivery links, payment references, and status history are used to operate and document collaborations. Fields marked as required are necessary for the associated account or transaction; optional profile content is your choice.</p>
+    <p>Security records include login activity, request metadata, and pseudonymous rate-limit identifiers used to prevent abuse. Account email records support verification, password recovery, and security notices. Briefvora does not request your bank login, card details, or uploaded identity documents through these forms.</p>
+  </section>
+  <section class="section-panel">
+    <h2>Visibility and service providers</h2>
+    <p>Published creator and profile information and public campaigns can be visible to site visitors. Private campaign and order information is restricted to authorized participants and operations staff. Phone numbers are restricted to their owner and operations staff. Never place sensitive personal information in public descriptions.</p>
+    <p>The website is hosted on Render and its database on Neon. When account email is enabled, the email provider Resend processes the recipient address and message content. External profile images and Google Fonts may receive your IP address when your browser loads those resources. Following a creator or delivery link takes you to that third party's service. Provider locations and any cross-border transfer requirements must be assessed by the operator.</p>
+    <p>CNDP notification, authorization, or applicable status: {{ config.get('PRIVACY_REGISTRATION') or '[Assessment and required formalities pending]' }}.</p>
+  </section>
+  <section class="section-panel">
+    <h2>Cookies, retention, and your rights</h2>
+    <p>Essential cookies maintain login sessions, security tokens, and an optional remembered login. Remembered login expires after 14 days; signed-in sessions are limited to 8 hours. The application does not currently include advertising trackers.</p>
+    <p>Data is kept only for necessary service, security, contractual, and legal purposes. Expired account-email records are removed after seven days when the email worker runs. Financial records and backup copies may require separate retention. A documented retention and deletion schedule for other records must be approved before public launch.</p>
+    <p>Contact the operator to request access, correction, deletion where available, or to object on legitimate grounds. Identity may need to be verified proportionately; do not email your password. Some information may need to be retained for legal obligations or disputes. You may contact the CNDP about data-protection concerns.</p>
+  </section>
+  {% else %}
+  <section class="section-panel">
+    <h2>Cancellation requests</h2>
+    <p>Contact support with the order reference and reason for cancellation. A request does not by itself cancel accepted work or reverse a bank transfer. Operations reviews the accepted brief, production stage, delivered work, correspondence, and applicable legal rights with the parties.</p>
+    <p>No general automatic-refund promise or blanket no-refund rule is made. Charges for completed or cancelled work, deadlines, and any revision or cure process must be expressly agreed and lawful. The final commercial rules and processing deadlines remain subject to owner approval before public launch.</p>
+  </section>
+  <section class="section-panel">
+    <h2>Marketing goals and non-delivery</h2>
+    <p>Failure to meet a desired sales, views, or ROI target is not by itself evidence that agreed content was not delivered, and does not by itself establish entitlement to a refund unless an enforceable performance commitment or applicable law provides otherwise. Non-delivery, materially nonconforming work, and misrepresentation must be assessed separately. Mandatory remedies remain available.</p>
+  </section>
+  <section class="section-panel">
+    <h2>Approved refunds</h2>
+    <p>When a refund is approved, operations arranges it through the bank and records its actual reference. The website does not send money automatically. Confirmation that a refund was completed must reflect the actual bank transaction, not merely a request or an internal status change. Never disclose your bank password or security codes to obtain a refund.</p>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

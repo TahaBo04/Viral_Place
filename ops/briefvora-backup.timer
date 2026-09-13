@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Briefvora backup while this computer is available
+
+[Timer]
+OnCalendar=*-*-* 08:15:00
+RandomizedDelaySec=10min
+Persistent=true
+Unit=briefvora-backup.service
+
+[Install]
+WantedBy=timers.target

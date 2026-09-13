@@ -7,8 +7,11 @@ from services.auth_security_service import consume_limit, _client_ip
 
 
 MAX_PASSWORD_LENGTH = 128
+MAX_TOKEN_LENGTH = 512
 FIELD_LIMITS = {
     "first_name": 80, "last_name": 80, "email": 120, "password": MAX_PASSWORD_LENGTH,
+    "current_password": MAX_PASSWORD_LENGTH, "new_password": MAX_PASSWORD_LENGTH,
+    "confirm_password": MAX_PASSWORD_LENGTH, "token": MAX_TOKEN_LENGTH,
     "admin_access_code": 128, "company_name": 140, "company_website": 255,
     "profile_picture": 255, "phone_region": 2, "phone_number": 32,
     "phone_national_number": 32, "display_name": 120, "niche": 80,
@@ -41,6 +44,8 @@ def protect_request():
         scope, maximum, seconds = "register", 10, 3600
     elif request.endpoint == "auth.login":
         scope, maximum, seconds = "login-requests", 40, 900
+    elif request.endpoint in ("account.forgot_password", "account.resend_verification", "account.reset_password", "account.verify_email", "account.security"):
+        scope, maximum, seconds = "account-security", 15, 900
     else:
         scope, maximum, seconds = "write-requests", 120, 60
     retry_after = consume_limit(scope, _client_ip(), maximum, seconds)

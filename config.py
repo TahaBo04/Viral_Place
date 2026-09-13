@@ -48,5 +48,16 @@ class Config:
     COMPANY_ACCOUNT_HOLDER = os.environ.get("COMPANY_ACCOUNT_HOLDER", "")
     COMPANY_BANK_CURRENCY = os.environ.get("COMPANY_BANK_CURRENCY", "mad").strip().lower()
     MARKETPLACE_CURRENCY = os.environ.get("MARKETPLACE_CURRENCY", "mad").strip().lower()
+    PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:5000")).rstrip("/")
+    RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+    MAIL_FROM = os.environ.get("MAIL_FROM", "")
+    SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "")
+    EMAIL_VERIFICATION_REQUIRED = os.environ.get("EMAIL_VERIFICATION_REQUIRED") == "1"
+    POLICIES_PUBLISHED = os.environ.get("POLICIES_PUBLISHED") == "1"
+    POLICY_VERSION = "2026-09-13"
+    BUSINESS_LEGAL_NAME = os.environ.get("BUSINESS_LEGAL_NAME", "")
+    BUSINESS_ADDRESS = os.environ.get("BUSINESS_ADDRESS", "")
+    BUSINESS_REGISTRATION = os.environ.get("BUSINESS_REGISTRATION", "")
+    PRIVACY_REGISTRATION = os.environ.get("PRIVACY_REGISTRATION", "")
     WTF_CSRF_TIME_LIMIT = 60 * 60 * 2
     MAX_OFFER_AMOUNT = int(os.environ.get("MAX_OFFER_AMOUNT", os.environ.get("MAX_OFFER_USD", "1000000")))
